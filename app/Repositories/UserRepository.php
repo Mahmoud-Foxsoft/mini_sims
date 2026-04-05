@@ -1,0 +1,122 @@
+<?php
+
+namespace App\Repositories;
+
+use App\Models\User;
+use App\Repositories\Facades\PlanFacade;
+use Illuminate\Database\Eloquent\Collection;
+use App\Repositories\Interfaces\UserInterface;
+use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
+
+class UserRepository implements UserInterface
+{
+
+    public function __construct(protected User $model) {}
+
+
+    public function find(int $id): ?User
+    {
+        return $this->model->find($id);
+    }
+
+    public function update(int $id, array $data): bool
+    {
+        $user = $this->model->find($id);
+        if (!$user) {
+            return false;
+        }
+        $password = !empty($data['password']) ? bcrypt($data['password']) : $user->password;
+        $data['password'] = $password;
+        return $user->update($data);
+    }
+
+
+    public function filter(array $filters): LengthAwarePaginator
+    {
+        $plans = PlanFacade::getAllPlans([]);
+
+        $query = $this->model
+            ->with(['orders.plan'])
+            ->select('users.*')
+            ->selectSub(function ($query) {
+                $query->from('orders')
+                    ->join('user_plans', 'user_plans.id', '=', 'orders.user_plan_id')
+                    ->whereColumn('user_plans.user_id', 'users.id')
+                    ->selectRaw('ROUND(SUM(orders.gb_amount * orders.price_per_gb), 2)');
+            }, 'total_spent');
+
+        foreach ($plans as $plan) {
+            $alias = strtolower(str_replace(' ', '_', $plan->name)) . '_data_limit_gb';
+            $alias2 = strtolower(str_replace(' ', '_', $plan->name)) . '_data_used_gb';
+
+            $query->selectSub(function ($q) use ($plan) {
+                $q->from('user_plans')
+                    ->where('plan_id', $plan->id)
+                    ->whereColumn('user_id', 'users.id')
+                    ->selectRaw('Round(COALESCE(SUM(data_limit), 0),2)');
+            }, $alias);
+            $query->selectSub(function ($q) use ($plan) {
+                $q->from('user_plans')
+                    ->where('plan_id', $plan->id)
+                    ->whereColumn('user_id', 'users.id')
+                    ->selectRaw('Round(COALESCE(SUM(data_used), 0),2)');
+            }, $alias2);
+        }
+
+        $query->when(isset($filters['name']), function ($query) use ($filters) {
+            $query->where('name', 'like', '%' . $filters['name'] . '%');
+        })
+            ->when(isset($filters['email']), function ($query) use ($filters) {
+                $query->where('email', 'like', '%' . $filters['email'] . '%');
+            })
+            ->when(isset($filters['is_blocked']), function ($query) use ($filters) {
+                if ($filters['is_blocked'] === 'true') {
+                    $query->where('is_blocked', true);
+                }
+            })->when(
+                (!empty($filters['sort'])),
+                function ($query) use ($filters) {
+                    foreach ($filters['sort'] as $field => $direction) {
+                        $query->orderBy($field, $direction);
+                    }
+                },
+            );
+
+        return $query->paginate(20);
+    }
+
+    public function addBalance(User $user, float $amount): bool
+    {
+        try {
+            $user->increment('balance', $amount);
+            return true;
+        } catch (\Throwable $th) {
+            Log::error('Error adding balance', [$th->getMessage()]);
+            return false;
+        }
+    }
+
+    public function checkBalance(User $user, float $amount): bool
+    {
+        return $user->balance >= $amount;
+    }
+
+    public function sumTotalUsersMonthly(?Carbon $from, ?Carbon $to): int
+    {
+        return Cache::remember('sum.users_' . $from?->toDateString() . '_' . $to?->toDateString(), 3600, function () use ($from, $to) {
+            return User::query()
+                ->where('email_verified_at', '!=', null)
+                ->when($from && $to, fn($q) => $q->whereBetween('created_at', [$from, $to]))
+                ->count();
+        });
+    }
+
+    public function getForSelect(string $email): LengthAwarePaginator
+    {
+        $users =  $this->model->with('userPlans:slug,alias,user_id')->select('id', 'email')->where('email', 'like', '%' . $email . '%')->paginate(10);
+        return $users;
+    }
+}
