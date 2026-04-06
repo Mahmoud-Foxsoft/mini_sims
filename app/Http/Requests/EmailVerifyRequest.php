@@ -25,7 +25,7 @@ class EmailVerifyRequest extends FormRequest
     {
         return [
             'otp' => 'required|numeric',
-            'session_id' => 'nullable|string',
+            'email' => 'required|email',
         ];
     }
 }

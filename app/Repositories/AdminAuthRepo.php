@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Repositories\Interfaces\AdminAuthInterface;
 use Illuminate\Http\Request;
 
-class AdminAuthRepository implements AdminAuthInterface
+class AdminAuthRepo implements AdminAuthInterface
 {
     public function __construct(private Admin $model) {}
 

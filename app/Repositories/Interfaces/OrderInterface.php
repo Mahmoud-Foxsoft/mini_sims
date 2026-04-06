@@ -9,7 +9,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface OrderInterface
 {
-    public function getAllOrdersForUserPlan(UserPlan $user_plan, array $filters): LengthAwarePaginator;
+    public function getAllOrders(array $filters): LengthAwarePaginator;
     public function createNewOrder(array $data): ?Order;
-    public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?array $user_plan_ids, ?int $user_id);
+    public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?int $user_id);
 }

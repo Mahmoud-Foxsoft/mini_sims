@@ -8,7 +8,7 @@ use App\Repositories\Interfaces\AdminInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Hash;
 
-class AdminRepository implements AdminInterface
+class AdminRepo implements AdminInterface
 {
     public function __construct(private Admin $model) {}
     public function getAllAdmins(?array $filters): LengthAwarePaginator

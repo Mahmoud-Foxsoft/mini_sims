@@ -12,9 +12,9 @@ class OrderService
 {
     public function __construct(private OrderInterface $repo) {}
 
-    public function getAllOrdersForUserPlan(UserPlan $user_plan, array $filters): LengthAwarePaginator
+    public function getAllOrders(array $filters): LengthAwarePaginator
     {
-        return $this->repo->getAllOrdersForUserPlan($user_plan, $filters);
+        return $this->repo->getAllOrders($filters);
     }
 
     public function createNewOrder(array $data): ?Order
@@ -22,8 +22,8 @@ class OrderService
         return $this->repo->createNewOrder($data);
     }
 
-    public function sumOrdersMonthly(?Carbon $from = null, ?Carbon $to = null, ?array $user_plan_ids = null, ?int $user_id = null)
+    public function sumOrdersMonthly(?Carbon $from = null, ?Carbon $to = null, ?int $user_id = null)
     {
-        return $this->repo->sumOrdersMonthly($from, $to, $user_plan_ids, $user_id);
+        return $this->repo->sumOrdersMonthly($from, $to, $user_id);
     }
 }

@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'nowPayments' => [
+        'api_url' => env('NOW_PAYMENTS_API_URL'),
+        'api_key' => env('NOW_PAYMENTS_API_KEY'),
+        'fee' => env('NOW_PAYMENTS_FEE'),
+    ],
+
+    'centralServer' => [
+        'api_url' => env('CENTRAL_SERVER_API_URL'),
+        'api_key' => env('CENTRAL_SERVER_API_KEY'),
+        'payment_url' => env('CENTRAL_SERVER_PAYMENT_URL'),
+        'phone_services_url' => env('CENTRAL_SERVER_PHONE_SERVICES_URL'),
+        'phone_numbers_url' => env('CENTRAL_SERVER_PHONE_NUMBERS_URL'),
+    ],
 ];

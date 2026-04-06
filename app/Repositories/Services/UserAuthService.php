@@ -67,4 +67,9 @@ class UserAuthService
         EmailVerifyNotificationJob::dispatch($user);
         return true;
     }
+
+    public function rotateApiKey(Request $request)
+    {
+        return $this->userAuthRepository->rotateApiKey($request);
+    }
 }

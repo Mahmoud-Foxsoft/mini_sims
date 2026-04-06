@@ -4,10 +4,11 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Factories\PaymentMethodFactory;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CreatePaymentRequest;
+use App\Http\Requests\UserStorePaymentRequest;
+use App\Http\Requests\EstimatePriceRequest;
+use App\Http\Services\NowPaymentService;
 use App\Models\Payment;
 use App\Repositories\Facades\PaymentFacade;
-use App\Services\NowPaymentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -34,97 +35,69 @@ class PaymentController extends Controller
     }
 
     /**
-     * Create a new payment request.
+     * Store a newly created payment for the authenticated user.
+     *
+     * @param  \App\Http\Requests\UserStorePaymentRequest  $request
+     * @return \Illuminate\Http\JsonResponse
      */
-    public function store(CreatePaymentRequest $request)
+    public function store(UserStorePaymentRequest $request)
     {
         try {
-            $validated = $request->validated();
             $user = $request->user();
+            $paymentData = array_merge($request->validated(), ['user_id' => $user->id]);
+            $nowPaymentResp = $this->nowPaymentService->createPayment(
+                $paymentData['amount'],
+                $paymentData['currency'],
+                $request->user()
+            );
+            if (!$nowPaymentResp['hasCreated']) {
+                return $this->sendError('Failed to create payment.', [], 200);
+            }
+            $paymentData['transaction_id'] = $nowPaymentResp['transaction_id'];
+            $payment = PaymentFacade::createPayment($paymentData, false);
 
-            $paymentMethod = PaymentMethodFactory::create($validated['source']);
-            if (! $paymentMethod) {
-                return $this->sendError('Unsupported payment source', [], 400);
+            if ($payment) {
+                $payment->pay_address = $nowPaymentResp['pay_address'];
+                $payment->pay_amount = $nowPaymentResp['pay_amount'];
+                return $this->sendResponse(['payment' => $payment], 'Payment created successfully.');
             }
 
-            $dto = $paymentMethod->preparePaymentDto($user, $validated);
-            $result = $paymentMethod->chargeNow($dto);
-
-            if (! $result->success) {
-                return $this->sendError($result->errorMessage ?? 'Payment failed', [], 400);
-            }
-
-            return $this->sendResponse([
-                'transaction' => $result->toArray(),
-                'status' => $result->isPending ? 'pending' : ($result->success ? 'completed' : 'failed'),
-                'pay_address' => $result->payAddress,
-                'pay_amount' => $result->payAmount,
-                'redirect_url' => $result->redirectUrl,
-            ], 'Payment initiated successfully');
+            return $this->sendError('Failed to create payment. You may have reached the limit of pending payments or created a payment too recently.', [], 422);
         } catch (\Throwable $th) {
-            Log::error('Failed to create payment: '.$th->getMessage(), [
-                'user_id' => $request->user()->id,
-                'stack' => $th->getTraceAsString(),
+            Log::error('Error creating user payment: ' . $th->getMessage(), [
+                'user_id' => $request->user()?->id,
+                'stack' => $th->getTraceAsString()
             ]);
-
             return $this->sendError('Failed to create payment.', ['error' => $th->getMessage()], 500);
         }
     }
 
-    /**
-     * Create a crypto payment via NowPayments.
-     */
-    protected function createCryptoPayment($user, array $validated)
+    public function estimate(EstimatePriceRequest $request)
     {
-        $amount = $validated['amount'];
-        $currency = $validated['currency'];
-
-        // Create payment with NowPayments
-        $result = $this->nowPaymentService->createPayment(
-            price_amount: $amount,
-            pay_currency: $currency,
-            user: $user
-        );
-
-        if (! $result['hasCreated']) {
-            return $this->sendError('Failed to create crypto payment', [], 500);
+        $data = $request->validated();
+        try {
+            $fee = (int) config('services.nowPayments.fee', 1.05);
+            $response = $this->nowPaymentService->getEstimatePrice($fee * $data['amount'], $data['currency']);
+            return $this->sendResponse(['data' => $response], 'estimated successfully');
+        } catch (\Throwable $th) {
+            Log::error('Error in estimation: ' . $th->getMessage(), [
+                'stack' => $th->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to estimate.', ['error' => 'Error in estimation'], 500);
         }
-
-        // Create the payment record in our database
-        $payment = PaymentFacade::createPayment([
-            'user_id' => $user->id,
-            'amount' => $amount,
-            'currency' => strtoupper($currency),
-            'paid_amount' => $result['pay_amount'],
-            'transaction_id' => $result['transaction_id'],
-            'payment_method' => 'crypto',
-            'status' => Payment::WAITING_STATUS,
-            'pay_address' => $result['pay_address'],
-        ]);
-
-        return $this->sendResponse([
-            'payment' => [
-                'id' => $payment->id,
-                'amount' => $payment->amount,
-                'currency' => $payment->currency,
-                'paid_amount' => $payment->paid_amount,
-                'status' => $payment->status,
-                'pay_address' => $result['pay_address'],
-                'transaction_id' => $payment->transaction_id,
-            ],
-        ], 'Payment created successfully');
     }
 
-    /**
-     * Get a specific payment.
-     */
-    public function show(Request $request, Payment $payment)
-    {
-        // Ensure user owns this payment
-        if ($payment->user_id !== $request->user()->id) {
-            return $this->sendError('Payment not found', [], 404);
-        }
 
-        return $this->sendResponse($payment, 'Payment fetched successfully');
+    public function getCurrencies()
+    {
+        try {
+            $selectedCurrencies = $this->nowPaymentService->getCurrencies();
+            return $this->sendResponse(['currencies' => $selectedCurrencies], 'currencies fetched successfully');
+        } catch (\Throwable $th) {
+            Log::error('Error fetching currencies: ' . $th->getMessage(), [
+                'stack' => $th->getTraceAsString()
+            ]);
+            return $this->sendError('Failed to currencies.', ['error' => 'Error in fetching currencies'], 500);
+        }
     }
 }

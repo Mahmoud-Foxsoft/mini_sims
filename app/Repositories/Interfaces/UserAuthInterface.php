@@ -64,4 +64,11 @@ interface UserAuthInterface
      * @return User|null
      */
     public function regenerateOtp(string $email): ?User;
+
+    /**
+     * Rotate the API key for the authenticated user
+     * @param Request $request
+     * @return string
+     */
+    public function rotateApiKey(Request $request): string;
 }

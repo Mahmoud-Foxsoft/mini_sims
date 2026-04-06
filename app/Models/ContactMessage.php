@@ -7,8 +7,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 #[Guarded([])]
-class Order extends Model
+class ContactMessage extends Model
 {
-    /** @use HasFactory<\Database\Factories\OrderFactory> */
     use HasFactory;
+
+    protected $casts = [
+        'is_read' => 'boolean',
+    ];
 }

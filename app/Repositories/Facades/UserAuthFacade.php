@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static mixed resetPassword(string $email, string $password, string $token)
  * @method static mixed verifyEmail(int $otp, string $email)
  * @method static bool resendOtp(string $email)
+ * @method static string rotateApiKey(\Illuminate\Http\Request $request)
  * @see \App\Repositories\Services\UserAuthService
  */
 class UserAuthFacade extends Facade

@@ -11,7 +11,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
-class UserRepository implements UserInterface
+class UserRepo implements UserInterface
 {
 
     public function __construct(protected User $model) {}

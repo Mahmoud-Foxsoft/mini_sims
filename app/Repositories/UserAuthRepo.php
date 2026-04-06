@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 
-class UserAuthRepository implements UserAuthInterface
+class UserAuthRepo implements UserAuthInterface
 {
     public function __construct(private User $model) {}
 
@@ -25,6 +25,7 @@ class UserAuthRepository implements UserAuthInterface
                 'otp' => random_int(1000, 9999),
                 'clean_email' => $data['clean_email'],
             ]);
+            // $user->createToken('externalApi', ['external-api'])->accessToken;
             Cache::put('otp_attempts_' . $user->email, 1, now()->addMinutes(60));
             return $user;
         } catch (\Throwable $th) {
@@ -49,7 +50,7 @@ class UserAuthRepository implements UserAuthInterface
 
     public function logout(Request $request): bool
     {
-        auth()->user()->token()->revoke();
+        $request->user()->token()->revoke();
         return true;
     }
 
@@ -127,5 +128,18 @@ class UserAuthRepository implements UserAuthInterface
         $user->created_at = now();
         $user->save();
         return $user;
+    }
+
+    public function rotateApiKey(Request $request): string
+    {
+        $user = $request->user();
+
+        $user->tokens()
+            ->where('name', 'externalApi')
+            ->update(['revoked' => true]);
+
+        $newToken = $user->createToken('externalApi', ['external-api'])->accessToken;
+
+        return $newToken;
     }
 }
