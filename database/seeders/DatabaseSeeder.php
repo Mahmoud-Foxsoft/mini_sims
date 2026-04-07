@@ -2,6 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\PhoneMessage;
 use App\Models\User;
 use App\Models\WalletTransaction;
 use App\Repositories\Facades\TransactionFacade;
@@ -37,5 +40,13 @@ class DatabaseSeeder extends Seeder
                 'Test Debit' . $i,
             );
         }
+        Order::factory(10)->create();
+        OrderItem::factory(10)->create();
+        PhoneMessage::factory(10)->create();
+        $this->call(
+            [
+                SettingSeeder::class,
+            ]
+        );
     }
 }

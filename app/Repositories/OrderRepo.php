@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\Order;
-use App\Models\UserPlan;
 use App\Repositories\Interfaces\OrderInterface;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -27,18 +26,22 @@ class OrderRepo implements OrderInterface
      *
      * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator<\App\Models\Order>
      */
-    public function getAllOrdersForUserPlan(UserPlan $user_plan, array $filters): LengthAwarePaginator
+    public function getAllOrders(array $filters): LengthAwarePaginator
     {
-        return $user_plan->orders()
+        return Order::when(
+                $filters['user_id'] ?? null,
+                fn($query, $user_id) => $query->where('user_id', $user_id)
+            )
+            ->when(
+                $filters['with_user'] ?? null,
+                fn($query) => $query->with('user')
+            )
             ->when(
                 $filters['created_at'] ?? null,
                 function ($query) use ($filters) {
                     $date = Carbon::parse($filters['created_at'])->format('Y-m-d');
                     $query->whereDate('created_at', $date);
                 }
-            )->when(
-                $filters['gb_amount'] ?? null,
-                fn($query, $amount) => $query->where('gb_amount', $amount)
             )->latest()->paginate(10);
     }
 
@@ -60,9 +63,9 @@ class OrderRepo implements OrderInterface
     {
         try {
             return Order::create([
-                'user_plan_id' => $data['user_plan_id'],
-                'gb_amount' => $data['gb_amount'],
-                'price_per_gb' => $data['price_per_gb'],
+                'user_id' => $data['user_id'],
+                'total_cent_price' => $data['total_cent_price'],
+                'status' => $data['status'] ?? 'pending'
             ]);
         } catch (\Throwable $th) {
             Log::error('Db Create Error', [$th->getMessage()]);
@@ -70,17 +73,14 @@ class OrderRepo implements OrderInterface
         }
     }
 
-    public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?array $user_plan_ids, ?int $user_id)
+    public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?int $user_id)
     {
-        return Cache::remember('sum.orders_' . $from?->toDateString() . '_' . $to?->toDateString() . '_' . $user_id, 3600, function () use ($user_plan_ids, $from, $to) {
+        return Cache::remember('sum.orders_' . $from?->toDateString() . '_' . $to?->toDateString() . '_' . $user_id, 3600, function () use ($from, $to) {
             return DB::table('orders')
-                ->join('user_plans', 'orders.user_plan_id', '=', 'user_plans.id')
-                ->join('plans', 'user_plans.plan_id', '=', 'plans.id')
-                ->where('user_plans.status', 'active')
+                ->where('status', 'completed')
                 ->when($from, fn($query) => $query->whereDate('orders.created_at', '>=', $from->toDateString()))
                 ->when($to, fn($query) => $query->whereDate('orders.created_at', '<=', $to->toDateString()))
-                ->selectRaw('plans.id,SUM(orders.gb_amount) as total_gb, SUM(orders.price_per_gb * orders.gb_amount) as total_price')
-                ->groupBy('plans.id')
+                ->selectRaw('SUM(orders.total_cent_price) as total_amount')
                 ->get();
         });
     }

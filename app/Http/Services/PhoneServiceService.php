@@ -12,6 +12,9 @@ class PhoneServiceService
 
     public static function getPhoneServices(): array
     {
+        if (empty(Cache::get(self::CACHE_KEY . 'services', []))) {
+            Cache::forget(self::CACHE_KEY . 'services');
+        }
         return Cache::remember(self::CACHE_KEY . 'services', 3600, function () {
             try {
                 $response = Http::centralServer()
@@ -23,7 +26,6 @@ class PhoneServiceService
                 Log::error('Error fetching phone services from Central Server', [
                     'exception' => $th->getMessage(),
                 ]);
-                Cache::forget(self::CACHE_KEY . 'services');
                 return [];
             }
         });

@@ -18,7 +18,10 @@ class OrderFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'id' => $this->faker->uuid(),
+            'user_id' => 1,
+            'total_cent_price' => $this->faker->numberBetween(1000, 99999),
+            'status' => $this->faker->randomElement(['pending', 'completed', 'partially_completed', 'cancelled']),
         ];
     }
 }

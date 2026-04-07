@@ -1,222 +1,212 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Email Verification</title>
     <style>
+        /* Reset & Base */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8fbfd;
+            background-color: #f3f4f6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            color: #374151;
+        }
+
+        .wrapper {
+            width: 100%;
+            background-color: #f3f4f6;
+            padding: 40px 0;
         }
 
         .email-container {
-            max-width: 580px;
-            margin: 40px auto;
+            max-width: 600px;
+            margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e5eef7;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
+        /* Header */
         .header {
-            background: linear-gradient(135deg, #007bff 0%, #0099ff 100%);
-            color: #ffffff;
-            padding: 40px 30px;
+            padding: 40px 40px 20px;
             text-align: center;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
-            position: relative;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .icon-wrapper {
+            display: inline-block;
+            background-color: #eef2ff;
+            padding: 16px;
+            border-radius: 50%;
+            margin-bottom: 16px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 700;
-            letter-spacing: -0.5px;
-            line-height: 1.2;
+            color: #111827;
+            letter-spacing: -0.025em;
         }
 
-        .header p {
-            margin-top: 10px;
-            font-size: 17px;
-            opacity: 0.9;
-        }
-
+        /* Content */
         .content {
-            padding: 35px 45px;
-            color: #333333;
-            line-height: 1.7;
+            padding: 30px 40px;
             font-size: 16px;
+            line-height: 1.6;
         }
 
         .content p {
-            margin-bottom: 20px;
+            margin: 0 0 16px;
         }
 
-        .otp-display {
-            background-color: #e6f0ff;
-            border: 2px solid #007bff;
-            border-radius: 12px;
-            padding: 30px 20px;
-            margin: 30px 0;
-            text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        .otp-display .label {
+        .greeting {
             font-size: 18px;
-            color: #0056b3;
             font-weight: 600;
+            color: #111827;
+        }
+
+        .highlight {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* OTP Section */
+        .otp-container {
+            background-color: #f9fafb;
+            border: 1px dashed #d1d5db;
+            border-radius: 8px;
+            padding: 32px 20px;
+            text-align: center;
+            margin: 32px 0;
+        }
+
+        .otp-label {
             display: block;
-            margin-bottom: 10px;
-        }
-
-        .otp-display .otp {
-            font-size: 40px;
-            font-weight: 800;
-            color: #003d80;
-            line-height: 1;
-            letter-spacing: 3px;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.05);
-        }
-
-        .button-container {
-            text-align: center;
-            margin-top: 40px;
-            margin-bottom: 20px;
-        }
-
-        .button {
-            display: inline-block;
-            background-color: #007bff;
-            color: #ffffff;
-            padding: 15px 30px;
-            border-radius: 10px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 17px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.25);
-        }
-
-        .button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
-        }
-
-        .footer {
-            background-color: #f0f5f9;
-            color: #8898a9;
-            text-align: center;
-            padding: 30px;
             font-size: 14px;
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
-            border-top: 1px solid #e5eef7;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #6b7280;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .otp-code {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 42px;
+            font-weight: 700;
+            color: #4f46e5;
+            letter-spacing: 8px;
+            margin: 0;
+        }
+
+        /* Notice */
+        .notice-box {
+            background-color: #fef2f2;
+            border-left: 4px solid #ef4444;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .notice-box p {
+            margin: 0;
+            font-size: 14px;
+            color: #991b1b;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f9fafb;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: #6b7280;
         }
 
         .footer a {
-            color: #007bff;
+            color: #4f46e5;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .footer a:hover {
             text-decoration: underline;
         }
 
+        /* Responsive */
         @media only screen and (max-width: 600px) {
-            .email-container {
-                margin: 20px;
-                border-radius: 12px;
+            .wrapper {
+                padding: 20px 10px;
             }
-
             .header {
-                padding: 30px 20px;
-                border-top-left-radius: 12px;
-                border-top-right-radius: 12px;
+                padding: 30px 20px 15px;
             }
-
-            .header h1 {
-                font-size: 28px;
-            }
-
             .content {
-                padding: 25px 30px;
+                padding: 20px;
             }
-
-            .otp-display {
-                padding: 25px 15px;
-                margin: 25px 0;
+            .otp-container {
+                padding: 24px 15px;
             }
-
-            .otp-display .otp {
-                font-size: 34px;
+            .otp-code {
+                font-size: 36px;
+                letter-spacing: 6px;
             }
-
-            .button {
-                padding: 12px 25px;
-                font-size: 16px;
-            }
-
             .footer {
-                padding: 25px;
-                border-bottom-left-radius: 12px;
-                border-bottom-right-radius: 12px;
-            }
-        }
-
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
+                padding: 20px;
             }
         }
     </style>
 </head>
-
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>📧 Verify Your Email</h1>
-            <p>Complete your registration by verifying your email address.</p>
-        </div>
-
-        <div class="content">
-            <p>Hi <strong>{{ $user->name }}</strong>,</p>
-            <p>Thank you for signing up! Please use the verification code below to confirm your email address
-                (<strong>{{ $user->email }}</strong>).</p>
-
-            <div class="otp-display">
-                <span class="label">Your Verification Code:</span>
-                <span class="otp">{{ $user->otp }}</span>
+    <div class="wrapper">
+        <div class="email-container">
+            <div class="header">
+                <div class="icon-wrapper">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                        <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                </div>
+                <h1>Verify Your Email</h1>
             </div>
 
-            <p>Your verification code will expire in <strong>30 minutes</strong>. Please complete your email
-                verification before it expires.</p>
+            <div class="content">
+                <p class="greeting">Hi {{ $user->name }},</p>
+                <p>Welcome to <strong>{{ config('app.name') }}</strong>! To complete your registration and secure your account, please verify your email address (<span class="highlight">{{ $user->email }}</span>).</p>
 
-            <p>If you did not create an account, you can safely ignore this email.</p>
+                <div class="otp-container">
+                    <span class="otp-label">Verification Code</span>
+                    <p class="otp-code">{{ $user->otp }}</p>
+                </div>
 
-            <p>Best regards,<br>{{ config('app.name') }} Team</p>
-        </div>
+                <div class="notice-box">
+                    <p>⏱️ This code will expire in <strong>30 minutes</strong>.</p>
+                </div>
 
-        <div class="footer">
-            <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
-            <p><a href="{{ config('app.url') }}">Visit Our Website</a></p>
+                <p>If you didn't attempt to register an account with us, you can safely ignore and delete this email.</p>
+
+                <p style="margin-top: 30px; margin-bottom: 0;">
+                    Best regards,<br>
+                    <strong>The {{ config('app.name') }} Team</strong>
+                </p>
+            </div>
+
+            <div class="footer">
+                <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p><a href="{{ config('app.url') }}">Visit Our Website</a></p>
+            </div>
         </div>
     </div>
 </body>
-
 </html>

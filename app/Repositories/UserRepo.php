@@ -36,35 +36,13 @@ class UserRepo implements UserInterface
 
     public function filter(array $filters): LengthAwarePaginator
     {
-        $plans = PlanFacade::getAllPlans([]);
 
         $query = $this->model
-            ->with(['orders.plan'])
             ->select('users.*')
             ->selectSub(function ($query) {
                 $query->from('orders')
-                    ->join('user_plans', 'user_plans.id', '=', 'orders.user_plan_id')
-                    ->whereColumn('user_plans.user_id', 'users.id')
-                    ->selectRaw('ROUND(SUM(orders.gb_amount * orders.price_per_gb), 2)');
+                    ->selectRaw('SUM(total_cent_price)');
             }, 'total_spent');
-
-        foreach ($plans as $plan) {
-            $alias = strtolower(str_replace(' ', '_', $plan->name)) . '_data_limit_gb';
-            $alias2 = strtolower(str_replace(' ', '_', $plan->name)) . '_data_used_gb';
-
-            $query->selectSub(function ($q) use ($plan) {
-                $q->from('user_plans')
-                    ->where('plan_id', $plan->id)
-                    ->whereColumn('user_id', 'users.id')
-                    ->selectRaw('Round(COALESCE(SUM(data_limit), 0),2)');
-            }, $alias);
-            $query->selectSub(function ($q) use ($plan) {
-                $q->from('user_plans')
-                    ->where('plan_id', $plan->id)
-                    ->whereColumn('user_id', 'users.id')
-                    ->selectRaw('Round(COALESCE(SUM(data_used), 0),2)');
-            }, $alias2);
-        }
 
         $query->when(isset($filters['name']), function ($query) use ($filters) {
             $query->where('name', 'like', '%' . $filters['name'] . '%');

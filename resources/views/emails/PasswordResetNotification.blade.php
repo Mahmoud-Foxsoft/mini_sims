@@ -1,168 +1,208 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Password Reset</title>
     <style>
+        /* Reset & Base */
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #f8fbfd;
+            background-color: #f3f4f6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
+            color: #374151;
+        }
+
+        .wrapper {
+            width: 100%;
+            background-color: #f3f4f6;
+            padding: 40px 0;
         }
 
         .email-container {
-            max-width: 580px;
-            margin: 40px auto;
+            max-width: 600px;
+            margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
-            border: 1px solid #e5eef7;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
         }
 
+        /* Header */
         .header {
-            background: linear-gradient(135deg, #007bff 0%, #0099ff 100%);
-            color: #ffffff;
-            padding: 40px 30px;
+            padding: 40px 40px 20px;
             text-align: center;
-            border-top-left-radius: 16px;
-            border-top-right-radius: 16px;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .icon-wrapper {
+            display: inline-block;
+            background-color: #eef2ff; 
+            padding: 16px;
+            border-radius: 50%;
+            margin-bottom: 16px;
         }
 
         .header h1 {
             margin: 0;
-            font-size: 32px;
+            font-size: 24px;
             font-weight: 700;
-            letter-spacing: -0.5px;
+            color: #111827;
+            letter-spacing: -0.025em;
         }
 
         .header p {
-            margin-top: 10px;
-            font-size: 17px;
-            opacity: 0.9;
+            margin: 8px 0 0;
+            font-size: 15px;
+            color: #6b7280;
         }
 
+        /* Content */
         .content {
-            padding: 35px 45px;
-            color: #333333;
-            line-height: 1.7;
+            padding: 30px 40px;
             font-size: 16px;
+            line-height: 1.6;
         }
 
         .content p {
-            margin-bottom: 20px;
+            margin: 0 0 16px;
         }
 
-        /* ✅ Updated Reset Box */
-        .reset-box {
-            padding: 30px 0;
-            margin: 30px 0;
-            text-align: center;
-            animation: fadeIn 0.8s ease-out;
-        }
-
-        .reset-box .label {
+        .greeting {
             font-size: 18px;
-            color: #0056b3;
             font-weight: 600;
-            margin-bottom: 15px;
-            display: block;
+            color: #111827;
         }
 
+        .highlight {
+            font-weight: 600;
+            color: #111827;
+        }
+
+        /* Button */
         .button-container {
             text-align: center;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            margin: 32px 0;
         }
 
         .button {
             display: inline-block;
-            background-color: #007bff;
+            background-color: #4f46e5; /* Brand Indigo */
             color: #ffffff;
-            padding: 15px 30px;
-            border-radius: 10px;
+            padding: 14px 32px;
+            border-radius: 6px;
             text-decoration: none;
-            font-weight: 700;
-            font-size: 17px;
-            transition: background-color 0.3s ease, transform 0.2s ease;
-            box-shadow: 0 6px 15px rgba(0, 123, 255, 0.25);
+            font-weight: 600;
+            font-size: 16px;
+            transition: background-color 0.2s ease;
         }
 
         .button:hover {
-            background-color: #0056b3;
-            transform: translateY(-2px);
+            background-color: #4338ca;
         }
 
-        .footer {
-            background-color: #f0f5f9;
-            color: #8898a9;
-            text-align: center;
-            padding: 30px;
+        /* Notice Box */
+        .notice-box {
+            background-color: #fffbeb; /* Amber warning */
+            border-left: 4px solid #f59e0b;
+            padding: 12px 16px;
+            margin-bottom: 24px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .notice-box p {
+            margin: 0;
             font-size: 14px;
-            border-bottom-left-radius: 16px;
-            border-bottom-right-radius: 16px;
-            border-top: 1px solid #e5eef7;
+            color: #92400e;
+        }
+
+        /* Footer */
+        .footer {
+            background-color: #f9fafb;
+            padding: 30px 40px;
+            text-align: center;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .footer p {
+            margin: 0 0 8px;
+            font-size: 14px;
+            color: #6b7280;
         }
 
         .footer a {
-            color: #007bff;
+            color: #4f46e5;
             text-decoration: none;
+            font-weight: 500;
         }
 
         .footer a:hover {
             text-decoration: underline;
         }
 
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+            .wrapper {
+                padding: 20px 10px;
             }
-
-            to {
-                opacity: 1;
-                transform: translateY(0);
+            .header {
+                padding: 30px 20px 15px;
+            }
+            .content {
+                padding: 20px;
+            }
+            .button {
+                display: block;
+                width: auto;
+            }
+            .footer {
+                padding: 20px;
             }
         }
     </style>
 </head>
-
 <body>
-    <div class="email-container">
-        <div class="header">
-            <h1>🔐 Password Reset Request</h1>
-            <p>We received a request to reset your password.</p>
-        </div>
-
-        <div class="content">
-            <p>Hi <strong>{{ $user->name }}</strong>,</p>
-            <p>You are receiving this email because we received a password reset request for your account
-                (<strong>{{ $user->email }}</strong>).</p>
-
-            <div class="reset-box">
-                <span class="label">Click the button below to reset your password:</span>
-                <div class="button-container">
-                    <a href="{{ $url }}">Reset Password</a>
+    <div class="wrapper">
+        <div class="email-container">
+            <div class="header">
+                <div class="icon-wrapper">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
                 </div>
+                <h1>Password Reset</h1>
+                <p>We received a request to reset your password.</p>
             </div>
 
-            <p>This password reset link will expire in {{ config('auth.passwords.users.expire') }} minutes.</p>
+            <div class="content">
+                <p class="greeting">Hi {{ $user->name }},</p>
+                <p>You are receiving this email because we received a password reset request for your account associated with <span class="highlight">{{ $user->email }}</span>.</p>
 
-            <p>If you did not request a password reset, no further action is required.</p>
+                <div class="button-container">
+                    <a href="{{ $url }}" class="button">Reset Password</a>
+                </div>
 
-            <p>Best regards,<br>The {{ config('app.name') }} Team</p>
-        </div>
+                <div class="notice-box">
+                    <p>⏱️ This password reset link will expire in <strong>{{ config('auth.passwords.users.expire') }} minutes</strong>.</p>
+                </div>
 
-        <div class="footer">
-            <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
-            <p><a href="{{ config('app.url') }}">Visit Our Website</a></p>
+                <p>If you did not request a password reset, you can safely ignore this email. Your password will remain unchanged.</p>
+
+                <p style="margin-top: 30px; margin-bottom: 0;">
+                    Best regards,<br>
+                    <strong>The {{ config('app.name') }} Team</strong>
+                </p>
+            </div>
+
+            <div class="footer">
+                <p>&copy; {{ date('Y') }} {{ config('app.name') }}. All rights reserved.</p>
+                <p><a href="{{ config('app.url') }}">Visit Our Website</a></p>
+            </div>
         </div>
     </div>
 </body>
-
 </html>

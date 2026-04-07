@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Repositories\Facades\SettingFacade;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Passport;
 
@@ -30,13 +32,13 @@ class AppServiceProvider extends ServiceProvider
         Http::macro('nowPayments', function () {
             return Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'x-api-key' => config('services.nowPayments.api_key')
+                'x-api-key' => config('services.nowPayments.api_key'),
             ])->baseUrl(config('services.nowPayments.api_url'));
         });
         Http::macro('centralServer', function () {
             return Http::withHeaders([
                 'Content-Type' => 'application/json',
-                'x-api-key' => config('services.centralServer.api_key')
+                'x-api-key' => config('services.centralServer.api_key'),
             ])->baseUrl(config('services.centralServer.api_url'));
         });
         Passport::tokensCan([
@@ -44,5 +46,10 @@ class AppServiceProvider extends ServiceProvider
             'user-api' => 'Access User API',
             'external-api' => 'Access External API',
         ]);
+
+        View::composer(['clinic.*', 'errors.404'], function ($view) {
+            $settings = SettingFacade::getCached();
+            $view->with($settings);
+        });
     }
 }

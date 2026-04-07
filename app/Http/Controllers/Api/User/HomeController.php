@@ -25,23 +25,13 @@ class HomeController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $user = $request->user();
-        $usageCount = UsageCounter::where('user_id', $user->id)->first();
-        $totalEmployees = $user->employees()->count();
-        $totalTeams = $user->teams()->count();
-        $connectedEmailAccounts = $user->emailAccounts()->where('desired_state', EmailAccount::ACTIVE_STATE)->count();
-        $totalEmailAccounts = $user->emailAccounts()->count();
-        $totalPayments = round(PaymentFacade::sumAmountMonthly($user->id), 2) . ' USD';
-        $plans = Plan::where('is_active', true)->get();
+        $id = $request->user()->id;
+        $totalPayments = round(PaymentFacade::sumAmountMonthly($id), 2) . ' USD';
+        $orders = round(OrderFacade::sumOrdersMonthly(now()->startOfMonth(),now()->endOfMonth(),$id)->first()->total_amount, 2) . ' USD';
         $totals = [
-            ['key' => 'Total Teams', 'value' => (string) $totalTeams, 'icon' => 'fa-users', 'route' => 'teams'],
-            ['key' => 'Total Employees', 'value' => (string) $totalEmployees, 'icon' => 'fa-people-group', 'route' => 'employees'],
-            ['key' => 'Total Email Accounts', 'value' => (string) $totalEmailAccounts, 'icon' => 'fa-envelope', 'route' => 'emails'],
-            ['key' => 'Total Running Email Accounts', 'value' => (string) $connectedEmailAccounts, 'icon' => 'fa-server', 'route' => 'emails'],
-            ['key' => 'Total Payments (This Month)', 'value' => $totalPayments, 'icon' => 'fa-credit-card', 'route' => 'payments'],
-            ['key' => 'Remaining SMTP Quota', 'value' => (string) $usageCount ? $usageCount->remaining_smtp_forward : 0, 'icon' => 'fa-chart-line', 'route' => null],
+            new TotalObject('Total Payments For Month', $totalPayments, 'payments'),
+            new TotalObject('Total Orders For Month', $orders, 'orders'),
         ];
-
-        return $this->sendResponse(['userPlan' => $user->subscription, 'totals' => $totals, 'plans' => $plans], 'User home fetched successfully');
+        return $this->sendResponse(['totals' => $totals], 'User home fetched successfully');
     }
 }
