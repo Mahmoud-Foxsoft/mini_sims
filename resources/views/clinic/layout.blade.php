@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
-    <title>{{ config('app.name') }} | @yield('title', $clinic_site_name ?? '')</title>
+    <title>{{ config('app.name') }} | @yield('title',  '')</title>
     <meta name="description" content="@yield('description')">
     <meta name="keywords" content="@yield('keywords')">
 

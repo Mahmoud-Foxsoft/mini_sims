@@ -1485,11 +1485,6 @@ section,
   line-height: 1;
 }
 
-.home-about .about-content .stats-grid .stat-item .stat-number::after {
-  content: "+";
-  font-size: 1.5rem;
-  margin-left: 2px;
-}
 
 .home-about .about-content .stats-grid .stat-item .stat-label {
   font-size: 0.95rem;
