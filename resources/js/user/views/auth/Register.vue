@@ -179,7 +179,7 @@ const submit = async () => {
                             <label
                                 for="register-terms"
                                 class="text-sm text-muted-color"
-                                >I accept the terms</label
+                                >I accept the <a class="underline text-primary" href="/terms">terms</a> & <a class="underline text-primary" href="/privacy">policy</a></label
                             >
                         </div>
                         <small
