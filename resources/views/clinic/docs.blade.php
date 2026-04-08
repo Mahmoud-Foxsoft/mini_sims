@@ -33,385 +33,327 @@
 
     <section class="section">
         <div class="container" data-aos="fade-up" data-aos-delay="100">
-            <h2>Base URL</h2>
-            <p>All endpoints below use:</p>
-            <pre><code class="language-bash">{{ $baseUrl }}</code></pre>
+            <div class="docs-layout">
+                <aside class="docs-sidebar">
+                    <h6>On This Page</h6>
+                    <nav>
+                        <a href="#base-url">Base URL</a>
+                        <a href="#auth">Authentication</a>
+                        <a href="#api-key">API Key</a>
+                        <a href="#downloads">Downloads</a>
+                        <a href="#endpoints">Endpoints</a>
+                        <a href="#get-me">GET /me</a>
+                        <a href="#get-orders">GET /orders</a>
+                        <a href="#get-phone-numbers">GET /phone-numbers</a>
+                        <a href="#get-transactions">GET /transactions</a>
+                        <a href="#get-payments">GET /payments</a>
+                        <a href="#post-payments">POST /payments</a>
+                        <a href="#get-currencies">GET /payments/currencies</a>
+                        <a href="#post-estimate">POST /payments/estimate</a>
+                        <a href="#get-payment">GET /payments/{payment}</a>
+                        <a href="#errors">Error Responses</a>
+                    </nav>
+                </aside>
 
-            <h2>API Key Management</h2>
-            <p>Generate or rotate your API key from the user dashboard. Use the Console to manage keys.</p>
+                <div class="docs-content">
+                    <div id="base-url">
+                        <h2>Base URL</h2>
+                        <p>All endpoints below use:</p>
+                        <pre><code class="language-bash">{{ $baseUrl }}</code></pre>
+                    </div>
 
-            <h2>Authentication</h2>
-            <p>Use a bearer token</p>
-            <pre><code class="language-bash">Authorization: Bearer &lt;token&gt;</code></pre>
+                    <div id="auth">
+                        <h2>Authentication</h2>
+                        <p>Use a bearer token with the <strong>external-api</strong> scope.</p>
+                        <pre><code class="language-bash">Authorization: Bearer &lt;token&gt;</code></pre>
+                    </div>
 
-            <h2>Endpoints</h2>
+                    <div id="api-key">
+                        <h2>API Key Management</h2>
+                        <p>Generate or rotate your API key from the user dashboard. Use the Console to manage keys.</p>
+                    </div>
 
-            <h3>GET /me</h3>
-            <p>Returns the authenticated user profile.</p>
-            <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/me" \
+                    <div id="downloads">
+                        <h2>Downloads</h2>
+                        <p><a href="/quicksms-api.postman_collection.json" download>Download Postman Collection</a></p>
+                    </div>
+
+                    <div id="endpoints">
+                        <h2>Endpoints</h2>
+                    </div>
+
+                    <div id="get-me">
+                        <h3>GET /me</h3>
+                        <p>Returns the authenticated user profile.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/me" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
-            <h2>Success Responses</h2>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "id": 1,
-        "name": "Test User",
-        "email": "test@example.com",
-        "email_verified_at": "2026-04-07T13:44:43.000000Z",
-        "balance_cents": 38375,
-        "webhook_url": null,
-        "created_at": "2026-04-07T13:44:43.000000Z",
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "id": 1,
+    "name": "Test User",
+    "email": "test@example.com",
+    "email_verified_at": "2026-04-07T13:44:43.000000Z",
+    "balance_cents": 38375,
+    "webhook_url": null,
+    "created_at": "2026-04-07T13:44:43.000000Z",
+    "updated_at": "2026-04-07T13:44:44.000000Z"
+  },
+  "message": "User profile fetched successfully"
+}</code></pre>
+                    </div>
+
+                    <div id="get-orders">
+                        <h3>GET /orders</h3>
+                        <p>List your orders.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/orders?filters[created_at]=2026-04-01" \
+  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
+
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": "267336c5-4c58-3f89-9cd1-e8835202da80",
+        "user_id": 1,
+        "total_cent_price": 90347,
+        "status": "completed",
+        "created_at": "2026-04-07T13:44:44.000000Z",
         "updated_at": "2026-04-07T13:44:44.000000Z"
-    },
-    "message": "User profile fetched successfully"
+      }
+    ],
+    "first_page_url": "{{ $baseUrl }}/orders?page=1",
+    "from": 1,
+    "last_page": 1,
+    "last_page_url": "{{ $baseUrl }}/orders?page=1",
+    "links": [
+      {
+        "url": null,
+        "label": "&laquo; Previous",
+        "page": null,
+        "active": false
+      },
+      {
+        "url": "{{ $baseUrl }}/orders?page=1",
+        "label": "1",
+        "page": 1,
+        "active": true
+      },
+      {
+        "url": null,
+        "label": "Next &raquo;",
+        "page": null,
+        "active": false
+      }
+    ],
+    "next_page_url": null,
+    "path": "{{ $baseUrl }}/orders",
+    "per_page": 10,
+    "prev_page_url": null,
+    "to": 1,
+    "total": 1
+  },
+  "message": "Orders retrieved successfully."
 }</code></pre>
+                    </div>
 
-            <h3>GET /orders</h3>
-            <p>List your orders.</p>
-            <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/orders" \
+                    <div id="get-phone-numbers">
+                        <h3>GET /phone-numbers</h3>
+                        <p>List order items and include received messages.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/phone-numbers?filters[service_name]=telegram&filters[status]=pending&filters[phone_number]=+1555" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
-            <h2>Success Responses</h2>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "current_page": 1,
-        "data": [
-            {
-                "id": "267336c5-4c58-3f89-9cd1-e8835202da80",
-                "user_id": 1,
-                "total_cent_price": 90347,
-                "status": "completed",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z"
-            },
-            {
-                "id": "ebdc07d4-3c9f-3373-822a-e16bd8c26c07",
-                "user_id": 1,
-                "total_cent_price": 16191,
-                "status": "completed",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z"
-            },
-            {
-                "id": "da8787f6-0826-31af-9edb-7f5d1631a2f5",
-                "user_id": 1,
-                "total_cent_price": 91032,
-                "status": "cancelled",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z"
-            },
-            {
-                "id": "fd43050e-5680-37e2-92d9-0c73968c9c0a",
-                "user_id": 1,
-                "total_cent_price": 81145,
-                "status": "pending",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z"
-            }
-        ],
-        "first_page_url": "{{ $baseUrl }}/orders?page=1",
-        "from": 1,
-        "last_page": 1,
-        "last_page_url": "{{ $baseUrl }}/orders?page=1",
-        "links": [
-            {
-                "url": null,
-                "label": "&laquo; Previous",
-                "page": null,
-                "active": false
-            },
-            {
-                "url": "{{ $baseUrl }}/orders?page=1",
-                "label": "1",
-                "page": 1,
-                "active": true
-            },
-            {
-                "url": null,
-                "label": "Next &raquo;",
-                "page": null,
-                "active": false
-            }
-        ],
-        "next_page_url": null,
-        "path": "{{ $baseUrl }}/orders",
-        "per_page": 10,
-        "prev_page_url": null,
-        "to": 4,
-        "total": 4
-    },
-    "message": "Orders retrieved successfully."
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "order_id": "267336c5-4c58-3f89-9cd1-e8835202da80",
+        "user_id": 1,
+        "service_name": "Dietrich, Turcotte and Durgan",
+        "phone_number": "651.410.9941",
+        "price_cents": 6292,
+        "status": "pending",
+        "created_at": "2026-04-07T13:44:44.000000Z",
+        "updated_at": "2026-04-07T13:44:44.000000Z",
+        "messages": [
+          {
+            "id": 8,
+            "message": "Test message1",
+            "order_item_id": 1,
+            "created_at": "2026-04-07T13:44:44.000000Z",
+            "updated_at": "2026-04-07T13:44:44.000000Z"
+          }
+        ]
+      }
+    ],
+    "first_page_url": "{{ $baseUrl }}/phone-numbers?page=1",
+    "from": 1,
+    "last_page": 1,
+    "last_page_url": "{{ $baseUrl }}/phone-numbers?page=1",
+    "links": [
+      {
+        "url": null,
+        "label": "&laquo; Previous",
+        "page": null,
+        "active": false
+      },
+      {
+        "url": "{{ $baseUrl }}/phone-numbers?page=1",
+        "label": "1",
+        "page": 1,
+        "active": true
+      },
+      {
+        "url": null,
+        "label": "Next &raquo;",
+        "page": null,
+        "active": false
+      }
+    ],
+    "next_page_url": null,
+    "path": "{{ $baseUrl }}/phone-numbers",
+    "per_page": 20,
+    "prev_page_url": null,
+    "to": 1,
+    "total": 1
+  },
+  "message": "Orders retrieved successfully."
 }</code></pre>
+                    </div>
 
-            <h3>GET /phone-numbers</h3>
-            <p>List order items and include received messages.</p>
-            <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/phone-numbers" \
+                    <div id="get-transactions">
+                        <h3>GET /transactions</h3>
+                        <p>Get your transaction history.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/transactions?per_page=20&filters[type]=credit&filters[source]=payment&filters[reference]=abc" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
-            <h2>Success Responses</h2>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "current_page": 1,
-        "data": [
-            {
-                "id": 1,
-                "order_id": "267336c5-4c58-3f89-9cd1-e8835202da80",
-                "user_id": 1,
-                "service_name": "Dietrich, Turcotte and Durgan",
-                "phone_number": "651.410.9941",
-                "price_cents": 6292,
-                "status": "pending",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z",
-                "messages": [
-                    {
-                        "id": 8,
-                        "message": "Test message1",
-                        "order_item_id": 1,
-                        "created_at": "2026-04-07T13:44:44.000000Z",
-                        "updated_at": "2026-04-07T13:44:44.000000Z"
-                    },
-                ]
-            },
-            {
-                "id": 3,
-                "order_id": "267336c5-4c58-3f89-9cd1-e8835202da80",
-                "user_id": 1,
-                "service_name": "Yost-Schmeler",
-                "phone_number": "934.493.0724",
-                "price_cents": 9043,
-                "status": "completed",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z",
-                "messages": [
-                    {
-                        "id": 1,
-                        "message": "Test message2",
-                        "order_item_id": 3,
-                        "created_at": "2026-04-07T13:44:44.000000Z",
-                        "updated_at": "2026-04-07T13:44:44.000000Z"
-                    }
-                ]
-            },
-            {
-                "id": 7,
-                "order_id": "267336c5-4c58-3f89-9cd1-e8835202da80",
-                "user_id": 1,
-                "service_name": "D'Amore-Bartell",
-                "phone_number": "1-832-443-0326",
-                "price_cents": 5334,
-                "status": "timeout_refunded",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z",
-                "messages": []
-            },
-            {
-                "id": 8,
-                "order_id": "267336c5-4c58-3f89-9cd1-e8835202da80",
-                "user_id": 1,
-                "service_name": "Treutel-Moore",
-                "phone_number": "(520) 272-4363",
-                "price_cents": 8778,
-                "status": "cancelled",
-                "created_at": "2026-04-07T13:44:44.000000Z",
-                "updated_at": "2026-04-07T13:44:44.000000Z",
-                "messages": []
-            },
-        ],
-        "first_page_url": "{{ $baseUrl }}/phone-numbers?page=1",
-        "from": 1,
-        "last_page": 1,
-        "last_page_url": "{{ $baseUrl }}/phone-numbers?page=1",
-        "links": [
-            {
-                "url": null,
-                "label": "&laquo; Previous",
-                "page": null,
-                "active": false
-            },
-            {
-                "url": "{{ $baseUrl }}/phone-numbers?page=1",
-                "label": "1",
-                "page": 1,
-                "active": true
-            },
-            {
-                "url": null,
-                "label": "Next &raquo;",
-                "page": null,
-                "active": false
-            }
-        ],
-        "next_page_url": null,
-        "path": "{{ $baseUrl }}/phone-numbers",
-        "per_page": 20,
-        "prev_page_url": null,
-        "to": 4,
-        "total": 4
-    },
-    "message": "Orders retrieved successfully."
-}</code></pre>
-
-            <h3>GET /transactions</h3>
-            <p>Get your transaction history.</p>
-            <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/transactions" \
-  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
-
-            <h2>Success Responses</h2>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "transactions": {
-            "current_page": 1,
-            "data": [
-                {
-                    "id": 5,
-                    "user_id": 1,
-                    "type": "credit",
-                    "amount_cents": 2963,
-                    "description": "Test Credit2",
-                    "reference_id": null,
-                    "created_at": "2026-04-07T13:44:44.000000Z",
-                    "updated_at": "2026-04-07T13:44:44.000000Z"
-                },
-                {
-                    "id": 6,
-                    "user_id": 1,
-                    "type": "debit",
-                    "amount_cents": 1000,
-                    "description": "Test Debit2",
-                    "reference_id": null,
-                    "created_at": "2026-04-07T13:44:44.000000Z",
-                    "updated_at": "2026-04-07T13:44:44.000000Z"
-                },
-            ],
-            "first_page_url": "{{ $baseUrl }}/transactions?page=1",
-            "from": 1,
-            "last_page": 1,
-            "last_page_url": "{{ $baseUrl }}/transactions?page=1",
-            "links": [
-                {
-                    "url": null,
-                    "label": "&laquo; Previous",
-                    "page": null,
-                    "active": false
-                },
-                {
-                    "url": "{{ $baseUrl }}/transactions?page=1",
-                    "label": "1",
-                    "page": 1,
-                    "active": true
-                },
-                {
-                    "url": null,
-                    "label": "Next &raquo;",
-                    "page": null,
-                    "active": false
-                }
-            ],
-            "next_page_url": null,
-            "path": "{{ $baseUrl }}/transactions",
-            "per_page": 20,
-            "prev_page_url": null,
-            "to": 2,
-            "total": 2
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "transactions": {
+      "current_page": 1,
+      "data": [
+        {
+          "id": 5,
+          "user_id": 1,
+          "type": "credit",
+          "amount_cents": 2963,
+          "description": "Test Credit2",
+          "reference_id": null,
+          "created_at": "2026-04-07T13:44:44.000000Z",
+          "updated_at": "2026-04-07T13:44:44.000000Z"
+        }
+      ],
+      "first_page_url": "{{ $baseUrl }}/transactions?page=1",
+      "from": 1,
+      "last_page": 1,
+      "last_page_url": "{{ $baseUrl }}/transactions?page=1",
+      "links": [
+        {
+          "url": null,
+          "label": "&laquo; Previous",
+          "page": null,
+          "active": false
         },
-        "credit_sum_cents": "2963",
-        "debit_sum_cents": "1000"
+        {
+          "url": "{{ $baseUrl }}/transactions?page=1",
+          "label": "1",
+          "page": 1,
+          "active": true
+        },
+        {
+          "url": null,
+          "label": "Next &raquo;",
+          "page": null,
+          "active": false
+        }
+      ],
+      "next_page_url": null,
+      "path": "{{ $baseUrl }}/transactions",
+      "per_page": 20,
+      "prev_page_url": null,
+      "to": 1,
+      "total": 1
     },
-    "message": "Transactions fetched successfully"
+    "credit_sum_cents": "2963",
+    "debit_sum_cents": "1000"
+  },
+  "message": "Transactions fetched successfully"
 }</code></pre>
+                    </div>
 
-            <h3>GET /payments</h3>
-            <p>List payments.</p>
-            <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments" \
+                    <div id="get-payments">
+                        <h3>GET /payments</h3>
+                        <p>List payments.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments?filters[status]=finished&filters[created_date]=2026-04-01" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
-            <h2>Success Responses</h2>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "current_page": 1,
-        "data": [
-            {
-                "id": 1,
-                "user_id": 1,
-                "amount": 89.47,
-                "currency": "AOA",
-                "transaction_id": "f922fbe5-c997-34f1-a8a9-fa9da63cbb5b",
-                "status": "finished",
-                "paid_amount": "29.85",
-                "created_at": "2026-04-08T07:51:43.000000Z",
-                "updated_at": "2026-04-08T07:51:43.000000Z"
-            },
-            {
-                "id": 2,
-                "user_id": 1,
-                "amount": 43.63,
-                "currency": "KHR",
-                "transaction_id": "2f6e4796-f483-31e4-b715-275278e278a3",
-                "status": "waiting",
-                "paid_amount": "31.72",
-                "created_at": "2026-04-08T07:51:43.000000Z",
-                "updated_at": "2026-04-08T07:51:43.000000Z"
-            },
-            {
-                "id": 3,
-                "user_id": 1,
-                "amount": 64.91,
-                "currency": "INR",
-                "transaction_id": "ff017ecc-61bb-3c25-ad01-9100f014f584",
-                "status": "waiting",
-                "paid_amount": "14.16",
-                "created_at": "2026-04-08T07:51:43.000000Z",
-                "updated_at": "2026-04-08T07:51:43.000000Z"
-            }
-        ],
-        "first_page_url": "{{ $baseUrl }}/payments?page=1",
-        "from": 1,
-        "last_page": 1,
-        "last_page_url": "{{ $baseUrl }}/payments?page=1",
-        "links": [
-            {
-                "url": null,
-                "label": "&laquo; Previous",
-                "page": null,
-                "active": false
-            },
-            {
-                "url": "{{ $baseUrl }}/payments?page=1",
-                "label": "1",
-                "page": 1,
-                "active": true
-            },
-            {
-                "url": null,
-                "label": "Next &raquo;",
-                "page": null,
-                "active": false
-            }
-        ],
-        "next_page_url": null,
-        "path": "{{ $baseUrl }}/payments",
-        "per_page": 20,
-        "prev_page_url": null,
-        "to": 3,
-        "total": 3
-    },
-    "message": "Payments fetched successfully"
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": {
+    "current_page": 1,
+    "data": [
+      {
+        "id": 1,
+        "user_id": 1,
+        "amount": 89.47,
+        "currency": "AOA",
+        "transaction_id": "f922fbe5-c997-34f1-a8a9-fa9da63cbb5b",
+        "status": "finished",
+        "paid_amount": "29.85",
+        "created_at": "2026-04-08T07:51:43.000000Z",
+        "updated_at": "2026-04-08T07:51:43.000000Z"
+      }
+    ],
+    "first_page_url": "{{ $baseUrl }}/payments?page=1",
+    "from": 1,
+    "last_page": 1,
+    "last_page_url": "{{ $baseUrl }}/payments?page=1",
+    "links": [
+      {
+        "url": null,
+        "label": "&laquo; Previous",
+        "page": null,
+        "active": false
+      },
+      {
+        "url": "{{ $baseUrl }}/payments?page=1",
+        "label": "1",
+        "page": 1,
+        "active": true
+      },
+      {
+        "url": null,
+        "label": "Next &raquo;",
+        "page": null,
+        "active": false
+      }
+    ],
+    "next_page_url": null,
+    "path": "{{ $baseUrl }}/payments",
+    "per_page": 20,
+    "prev_page_url": null,
+    "to": 1,
+    "total": 1
+  },
+  "message": "Payments fetched successfully"
 }</code></pre>
+                    </div>
 
-            <h3>POST /payments</h3>
-            <p>Create a payment request.</p>
-            <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/payments" \
+                    <div id="post-payments">
+                        <h3>POST /payments</h3>
+                        <p>Create a payment request.</p>
+                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/payments" \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
   -d '{
@@ -419,23 +361,22 @@
     "currency": "USD",
     "paid_amount": 50
   }'</code></pre>
-
-            <h2>Success Responses</h2>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-  "success": true,
-  "message": "Operation completed successfully.",
-  "data": {
-    // Expected response data here
-  }
-}</code></pre>
-
-            <h3>GET /payments/currencies</h3>
-            <p>Returns supported currencies.</p>
-            <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments/currencies" \
+  <h4>Success Responses</h4>
+  <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
+  <pre><code class="language-json">{
+    "success": true,
+    "message": "Operation completed successfully.",
+    "data": {
+      // Expected response data here
+    }
+  }</code></pre>
+</div>
+                    <div id="get-currencies">
+                        <h3>GET /payments/currencies</h3>
+                        <p>Returns supported currencies.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments/currencies" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
-
-            <h2>Success Responses</h2>
+   <h4>Success Responses</h4>
             <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
             <pre><code class="language-json">{
     "success": true,
@@ -459,17 +400,19 @@
     "message": "currencies fetched successfully"
 }</code></pre>
 
-            <h3>POST /payments/estimate</h3>
-            <p>Estimate the payment amount in a selected currency.</p>
-            <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/payments/estimate" \
+                    </div>
+
+                    <div id="post-estimate">
+                        <h3>POST /payments/estimate</h3>
+                        <p>Estimate the payment amount in a selected currency.</p>
+                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/payments/estimate" \
   -H "Authorization: Bearer &lt;token&gt;" \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 50,
     "currency": "USD"
   }'</code></pre>
-
-            <h2>Success Responses</h2>
+              <h4>Success Responses</h4>
             <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
             <pre><code class="language-json">{
     "success": true,
@@ -483,18 +426,21 @@
     },
     "message": "estimated successfully"
 }</code></pre>
+                    </div>
 
-
-            <h2>Error Responses</h2>
-            <p>All responses use a standard JSON shape with a message and data payload. Errors return an error message and
-                status code.</p>
-            <pre><code class="language-json">{
+                    <div id="errors">
+                        <h2>Error Responses</h2>
+                        <p>Errors return a JSON response with a message and error details.</p>
+                        <pre><code class="language-json">{
   "success": false,
   "message": "Unauthorized",
   "data": {
     "error": "Unauthenticated."
   }
 }</code></pre>
+                    </div>
+                </div>
+            </div>
         </div>
     </section>
 @endsection
