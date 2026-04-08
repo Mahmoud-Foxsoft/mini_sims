@@ -2,8 +2,8 @@
 
 namespace App\Repositories;
 
-use App\Repositories\Interfaces\PaymentInterface;
 use App\Models\Payment;
+use App\Repositories\Interfaces\PaymentInterface;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Log;
 
 class PaymentRepo implements PaymentInterface
 {
-
     /**
      * Create a new payment for a user.
      *
@@ -20,29 +19,32 @@ class PaymentRepo implements PaymentInterface
      * - If the user's last payment was created less than 15 minutes ago, creation is blocked.
      * - If the user's last 3 payments all have a "waiting" status, creation is blocked.
      *
-     * @param  array  $data   The payment data to insert. Must include 'user_id'.
-     * @param  bool   $force  If true, bypasses the time and status restrictions Usefull for Admin.
-     *
-     * @return bool  Returns true if the payment was created successfully, false otherwise.
+     * @param  array  $data  The payment data to insert. Must include 'user_id'.
+     * @param  bool  $force  If true, bypasses the time and status restrictions Usefull for Admin.
+     * @return bool Returns true if the payment was created successfully, false otherwise.
      */
     public function createPayment(array $data, bool $force = false): ?Payment
     {
         try {
-            if (!$force) {
+            if (! $force) {
                 $waiting_payments = Payment::where('user_id', $data['user_id'])->whereNotIn('status', [Payment::REFUNDED_STATUS, Payment::FINISHED_STATUS])
                     ->where('created_at', '>=', now()->subMinutes(15))->count();
-                if ($waiting_payments >= 3) return null;
+                if ($waiting_payments >= 3) {
+                    return null;
+                }
             }
+
             return Payment::create([
                 'user_id' => $data['user_id'],
                 'amount' => $data['amount'],
                 'currency' => strtoupper($data['currency']),
                 'status' => $data['status'] ?? Payment::WAITING_STATUS,
                 'transaction_id' => $data['transaction_id'],
-                'paid_amount' => $data['paid_amount']
+                'paid_amount' => $data['paid_amount'],
             ]);
         } catch (\Throwable $th) {
             Log::error('Db Create Error', [$th->getMessage()]);
+
             return null;
         }
     }
@@ -57,24 +59,23 @@ class PaymentRepo implements PaymentInterface
      *
      * Results are ordered by latest created first.
      *
-     * @param  int    $user_id  The ID of the user whose payments should be retrieved.
+     * @param  int  $user_id  The ID of the user whose payments should be retrieved.
      * @param  array  $filters  Optional filters to apply to the query.
-     *
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getAllUserPayments(int $user_id, array $filters): LengthAwarePaginator
     {
         $payments = Payment::where('user_id', $user_id)
             ->when(
                 $filters['status'] ?? null,
-                fn($query, $status) => $query->where('status', $status)
+                fn ($query, $status) => $query->where('status', $status)
             )->when(
                 $filters['created_date'] ?? null,
                 function ($query) use ($filters) {
-                    $date = Carbon::parse($filters['created_at'])->format('Y-m-d');
+                    $date = Carbon::parse($filters['created_date'])->format('Y-m-d');
                     $query->whereDate('created_at', $date);
                 }
             )->latest();
+
         return $payments->paginate(20);
     }
 
@@ -90,15 +91,13 @@ class PaymentRepo implements PaymentInterface
      * Results are eager-loaded with the related `user` and ordered by latest created first.
      *
      * @param  array  $filters  Optional filters to apply to the query.
-     *
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
      */
     public function getAllPayments(array $filters): LengthAwarePaginator
     {
         $payments = Payment::with('user')
             ->when(
                 $filters['status'] ?? null,
-                fn($query, $status) => $query->where('status', $status)
+                fn ($query, $status) => $query->where('status', $status)
             )->when(
                 $filters['created_date'] ?? null,
                 function ($query) use ($filters) {
@@ -107,8 +106,9 @@ class PaymentRepo implements PaymentInterface
                 }
             )->when(
                 $filters['email'] ?? null,
-                fn($query, $email) => $query->whereHas('user', fn($q) => $q->where('email', 'like', "%$email%"))
+                fn ($query, $email) => $query->whereHas('user', fn ($q) => $q->where('email', 'like', "%$email%"))
             )->latest();
+
         return $payments->paginate(20);
     }
 
@@ -120,16 +120,17 @@ class PaymentRepo implements PaymentInterface
      * return false.
      *
      * @param  Payment  $payment  The payment to delete.
-     *
-     * @return bool  True if the payment was deleted successfully, false otherwise.
+     * @return bool True if the payment was deleted successfully, false otherwise.
      */
     public function deletePayment(Payment $payment): bool
     {
         try {
             $payment->delete();
+
             return true;
         } catch (\Throwable $th) {
             Log::error('Error Deleting payment', [$th->getMessage()]);
+
             return false;
         }
     }
@@ -140,10 +141,9 @@ class PaymentRepo implements PaymentInterface
      * Only the allowed fields (`status`, `paid_amount`, `has_used`) will be updated,
      * and only if they exist in the provided data array.
      *
-     * @param  Payment   $payment  The payment to update.
-     * @param  array $data        Key-value pairs of fields to update.
-     *
-     * @return bool  True if the payment was found and updated successfully, false otherwise.
+     * @param  Payment  $payment  The payment to update.
+     * @param  array  $data  Key-value pairs of fields to update.
+     * @return bool True if the payment was found and updated successfully, false otherwise.
      */
     public function updatePayment(Payment $payment, array $data): bool
     {
@@ -153,9 +153,11 @@ class PaymentRepo implements PaymentInterface
                 return false;
             }
             $payment->update($allowed);
+
             return true;
         } catch (\Throwable $th) {
             Log::error('Error updating payment', [$th->getMessage()]);
+
             return false;
         }
     }
@@ -171,23 +173,24 @@ class PaymentRepo implements PaymentInterface
      * The result is cached for 1 hour to improve performance.
      *
      * @param  int|null  $user_id  The ID of the user to filter by, or null for all users.
-     * @param  Carbon|null  $from   Optional start date to filter the payments.
-     * @param  Carbon|null  $to     Optional end date to filter the payments.
-     * @return float      The total finished payment amount for the current month.
+     * @param  Carbon|null  $from  Optional start date to filter the payments.
+     * @param  Carbon|null  $to  Optional end date to filter the payments.
+     * @return float The total finished payment amount for the current month.
      */
     public function sumAmountMonthly(?int $user_id = null): float
     {
-        return Cache::remember('sum.payment' . $user_id, 3600, function () use ($user_id) {
+        return Cache::remember('sum.payment'.$user_id, 3600, function () use ($user_id) {
             return Payment::query()
-                ->when($user_id, fn($q) => $q->where('user_id', $user_id))
+                ->when($user_id, fn ($q) => $q->where('user_id', $user_id))
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->where('status', Payment::FINISHED_STATUS)
                 ->sum('amount');
         });
     }
+
     public function sumAmountWithUserCount(Carbon $from, Carbon $to): Collection
     {
-        return Cache::remember('sum.payment_with_user_count_' . $from->toDateString() . '_' . $to->toDateString(), 3600, function () use ($from, $to) {
+        return Cache::remember('sum.payment_with_user_count_'.$from->toDateString().'_'.$to->toDateString(), 3600, function () use ($from, $to) {
             return Payment::query()
                 ->whereBetween('created_at', [$from, $to])
                 ->where('status', Payment::FINISHED_STATUS)

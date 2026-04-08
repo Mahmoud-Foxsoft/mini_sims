@@ -2,10 +2,9 @@
 
 namespace App\Repositories;
 
-use App\Models\WalletTransaction;
 use App\Models\User;
+use App\Models\WalletTransaction;
 use App\Repositories\Interfaces\TransactionInterface;
-use Illuminate\Pagination\LengthAwarePaginator;
 
 class TransactionRepo implements TransactionInterface
 {
@@ -14,7 +13,7 @@ class TransactionRepo implements TransactionInterface
     public function getPaginated(array $filters = [], int $perPage = 20): array
     {
         $query = $this->model
-            ->when(isset($filters['with_user']) && $filters['with_user'] !== null && $filters['with_user'] !== '', function ($query) use ($filters) {
+            ->when(isset($filters['with_user']) && $filters['with_user'] !== null && $filters['with_user'] !== '', function ($query) {
                 $query->with('user');
             })
             ->when(isset($filters['user_id']) && $filters['user_id'] !== null && $filters['user_id'] !== '', function ($query) use ($filters) {
@@ -22,23 +21,20 @@ class TransactionRepo implements TransactionInterface
             })
             ->when(isset($filters['email']) && $filters['email'] !== null && $filters['email'] !== '', function ($query) use ($filters) {
                 $query->whereHas('user', function ($userQuery) use ($filters) {
-                    $userQuery->where('email', 'like', '%' . $filters['email'] . '%');
+                    $userQuery->where('email', 'like', '%'.$filters['email'].'%');
                 });
             })
             ->when(isset($filters['type']) && $filters['type'] !== null && $filters['type'] !== '', function ($query) use ($filters) {
                 $query->where('type', $filters['type']);
             })
-            ->when(isset($filters['source']) && $filters['source'] !== null && $filters['source'] !== '', function ($query) use ($filters) {
-                $query->where('source', $filters['source']);
-            })
             ->when(isset($filters['reference']) && $filters['reference'] !== null && $filters['reference'] !== '', function ($query) use ($filters) {
-                $query->where('reference_id', 'like', '%' . $filters['reference'] . '%');
+                $query->where('reference_id', 'like', '%'.$filters['reference'].'%');
             });
 
-        $sums = $this->model->selectRaw("
+        $sums = $this->model->selectRaw('
     SUM(CASE WHEN type = ? THEN amount_cents ELSE 0 END) as credit_sum_cents,
     SUM(CASE WHEN type = ? THEN amount_cents ELSE 0 END) as debit_sum_cents
-", ['credit', 'debit'])->first();
+', ['credit', 'debit'])->first();
 
         $paginator = $query
             ->orderBy('created_at', 'desc')
@@ -61,6 +57,7 @@ class TransactionRepo implements TransactionInterface
             'reference_id' => $reference,
         ]);
         $user->increment('balance_cents', $amountCents);
+
         return $transaction;
     }
 
@@ -74,6 +71,7 @@ class TransactionRepo implements TransactionInterface
             'reference_id' => $reference,
         ]);
         $user->decrement('balance_cents', $amountCents);
+
         return $transaction;
     }
 
@@ -93,6 +91,7 @@ class TransactionRepo implements TransactionInterface
         if (empty($allowed)) {
             return false;
         }
+
         return $transaction->update($allowed);
     }
 }
