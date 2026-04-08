@@ -175,12 +175,6 @@ class SettingSeeder extends Seeder
                 'title' => 'Home Primary Label',
             ],
             [
-                'key' => 'home_primary_url',
-                'value' => '/services',
-                'type' => 'string',
-                'title' => 'Home Primary URL',
-            ],
-            [
                 'key' => 'home_secondary_label',
                 'value' => 'View API Docs',
                 'type' => 'string',
@@ -191,12 +185,6 @@ class SettingSeeder extends Seeder
                 'value' => 'terminal',
                 'type' => 'string',
                 'title' => 'Home Secondary Icon',
-            ],
-            [
-                'key' => 'home_secondary_url',
-                'value' => '#',
-                'type' => 'string',
-                'title' => 'Home Secondary URL',
             ],
             [
                 'key' => 'home_highlight_icon',

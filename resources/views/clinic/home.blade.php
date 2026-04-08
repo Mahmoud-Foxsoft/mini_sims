@@ -56,8 +56,8 @@
                         </div>
 
                         <div class="hero-actions" data-aos="fade-right" data-aos-delay="600">
-                            <a href="{{ $home_primary_url }}" class="btn btn-primary">{{ $home_primary_label }}</a>
-                            <a href="{{ $home_secondary_url }}" class="btn btn-outline">
+                            <a href="/dashboard/login" class="btn btn-primary">{{ $home_primary_label }}</a>
+                            <a href="{{ route('clinic.docs') }}" class="btn btn-outline">
                                 <i class="bi bi-{{ $home_secondary_icon }} me-2"></i>
                                 {{ $home_secondary_label }}
                             </a>

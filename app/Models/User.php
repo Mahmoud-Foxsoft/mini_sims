@@ -15,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Passport\HasApiTokens;
 
 #[Guarded([])]
-#[Hidden(['password', 'remember_token', 'otp', 'is_blocked'])]
+#[Hidden(['password', 'remember_token', 'otp', 'is_blocked','clean_email'])]
 #[ObservedBy(['App\Observers\UserObserver'])]
 class User extends Authenticatable
 {

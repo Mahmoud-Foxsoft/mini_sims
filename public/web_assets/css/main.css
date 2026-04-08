@@ -6212,3 +6212,108 @@ section,
   padding-bottom: 60px;
   /* Add your styles here */
 }
+
+/* Scope styles strictly to the docs page */
+.docs-page .page-title {
+    background-color: #f8f9fa;
+    padding: 4rem 0 2rem;
+    border-bottom: 1px solid #e9ecef;
+    margin-bottom: 3rem;
+}
+
+.docs-page .heading-title {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #212529;
+    margin-bottom: 0.5rem;
+}
+
+.docs-page .page-title p {
+    font-size: 1.1rem;
+    color: #6c757d;
+}
+
+.docs-page .breadcrumbs {
+    margin-top: 2rem;
+    font-size: 0.9rem;
+}
+
+.docs-page .breadcrumbs ol {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    color: #6c757d;
+}
+
+.docs-page .breadcrumbs li.current {
+    color: #212529;
+    font-weight: 500;
+}
+
+.docs-page .breadcrumbs a {
+    color: #0d6efd;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.docs-page .breadcrumbs a:hover {
+    color: #0a58ca;
+}
+
+.docs-page .section {
+    padding-bottom: 5rem;
+}
+
+/* Headings inside the documentation body */
+.docs-page h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+    color: #212529;
+    border-bottom: 1px solid #e9ecef;
+    padding-bottom: 0.5rem;
+}
+
+.docs-page h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+    color: #343a40;
+}
+
+.docs-page p {
+    color: #495057;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+/* Code block styling */
+.docs-page pre {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+    padding: 1.25rem;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin-top: 0.5rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.docs-page pre code {
+    font-family: 'Fira Code', 'Courier New', Courier, monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+/* Inline emphasis inside paragraphs */
+.docs-page p strong {
+    background-color: #f1f3f5;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-weight: 600;
+    color: #d63384;
+    font-size: 0.9em;
+}

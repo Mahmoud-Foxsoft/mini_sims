@@ -18,7 +18,13 @@ class PaymentFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => 1,
+            'amount' => $this->faker->randomFloat(2, 0, 100),
+            'currency' => $this->faker->currencyCode(),
+            'transaction_id' => $this->faker->uuid(),
+            'has_used' => $this->faker->boolean(),
+            'status' => $this->faker->randomElement([Payment::WAITING_STATUS, Payment::CONFIRMING_STATUS, Payment::SENDING_STATUS, Payment::FINISHED_STATUS]),
+            'paid_amount' => $this->faker->randomFloat(2, 0, 100),
         ];
     }
 }

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('service_name');
             $table->string('phone_number');
             $table->unsignedBigInteger('price_cents'); // Price for this individual number
-            $table->enum('status', ['pending', 'active', 'completed', 'timeout_refunded'])->default('pending');
+            $table->enum('status', ['pending', 'active', 'completed', 'timeout_refunded', 'cancelled'])->default('pending');
             $table->timestamps();
 
             $table->index(['user_id', 'service_name']);

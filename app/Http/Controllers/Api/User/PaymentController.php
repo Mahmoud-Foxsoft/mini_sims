@@ -2,12 +2,10 @@
 
 namespace App\Http\Controllers\Api\User;
 
-use App\Factories\PaymentMethodFactory;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UserStorePaymentRequest;
 use App\Http\Requests\EstimatePriceRequest;
 use App\Http\Services\NowPaymentService;
-use App\Models\Payment;
 use App\Repositories\Facades\PaymentFacade;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -72,32 +70,4 @@ class PaymentController extends Controller
         }
     }
 
-    public function estimate(EstimatePriceRequest $request)
-    {
-        $data = $request->validated();
-        try {
-            $fee = (int) config('services.nowPayments.fee', 1.05);
-            $response = $this->nowPaymentService->getEstimatePrice($fee * $data['amount'], $data['currency']);
-            return $this->sendResponse(['data' => $response], 'estimated successfully');
-        } catch (\Throwable $th) {
-            Log::error('Error in estimation: ' . $th->getMessage(), [
-                'stack' => $th->getTraceAsString()
-            ]);
-            return $this->sendError('Failed to estimate.', ['error' => 'Error in estimation'], 500);
-        }
-    }
-
-
-    public function getCurrencies()
-    {
-        try {
-            $selectedCurrencies = $this->nowPaymentService->getCurrencies();
-            return $this->sendResponse(['currencies' => $selectedCurrencies], 'currencies fetched successfully');
-        } catch (\Throwable $th) {
-            Log::error('Error fetching currencies: ' . $th->getMessage(), [
-                'stack' => $th->getTraceAsString()
-            ]);
-            return $this->sendError('Failed to currencies.', ['error' => 'Error in fetching currencies'], 500);
-        }
-    }
 }

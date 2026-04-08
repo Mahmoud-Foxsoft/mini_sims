@@ -14,6 +14,6 @@ class OrderItemsController extends Controller
         $filters['user_id'] = $request->user()->id;
         $filters['with_messages'] = true;
         $orderItems = OrderItemFacade::all($filters);
-        return $this->sendResponse(['orderItems' => $orderItems], 'Orders retrieved successfully.');
+        return $this->sendResponse($orderItems, 'Orders retrieved successfully.');
     }
 }

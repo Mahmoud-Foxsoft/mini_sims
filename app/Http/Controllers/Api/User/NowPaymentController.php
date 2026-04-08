@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EstimatePriceRequest;
-use App\Services\NowPaymentService;
+use App\Http\Services\NowPaymentService;
 use Illuminate\Support\Facades\Log;
 
 class NowPaymentController extends Controller

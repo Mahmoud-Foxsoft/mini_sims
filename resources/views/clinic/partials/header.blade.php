@@ -1,3 +1,4 @@
+
 <header id="header" class="header fixed-top">
 
     <div class="topbar d-flex align-items-center dark-background">
@@ -8,7 +9,7 @@
                 <i class="bi bi-phone d-flex align-items-center ms-4"><span>{{ $site_phone }}</span></i>
             </div>
             <div class="social-links d-none d-md-flex align-items-center">
-                @foreach (json_decode($site_social, true) as $social)
+                @foreach (json_decode($site_social, true) ?? [] as $social)
                     <a target="_blank" href="{{ $social['url'] }}" class="{{ $social['icon'] }}">
                         <i class="bi bi-{{ $social['icon'] }}"></i>
                     </a>
@@ -38,6 +39,9 @@
                     </li>
                     <li><a href="{{ route('clinic.services') }}"
                             class="{{ request()->routeIs('clinic.services') ? 'active' : '' }}">Services</a>
+                    </li>
+                    <li><a href="{{ route('clinic.docs') }}"
+                            class="{{ request()->routeIs('clinic.docs') ? 'active' : '' }}">Docs</a>
                     </li>
                     <li><a href="{{ route('clinic.contact') }}"
                             class="{{ request()->routeIs('clinic.contact') ? 'active' : '' }}">Contact Us</a>

@@ -34,7 +34,7 @@
                                     <h6>Useful
                                         Links</h6>
                                     <nav class="footer-nav"><a href="/">Home</a><a href="/about">About</a><a
-                                            href="/services">Services</a></nav>
+                                            href="/services">Services</a><a href="/v1/docs">Docs</a></nav>
                                 </div>
                             </div>
                             <div class="col-6 col-lg-6">

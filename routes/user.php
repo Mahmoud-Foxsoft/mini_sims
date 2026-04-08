@@ -29,17 +29,18 @@ Route::group(['middleware' => ['auth:api', 'scopes:user-api']], function () {
     Route::put('me', UserController::class);
 });
 
-Route::group(['middleware' => ['auth:api', 'scopesAny:external-api,user-api']], function () {
-    Route::get('me', [AuthController::class, 'getUserProfile']);
-    Route::apiResource('orders', OrdersController::class)->only(['index', 'store']);
-    Route::apiResource('order-items', OrderItemsController::class)->only(['index']);
-    // Transactions
-    Route::get('transactions', [TransactionController::class, 'index']);
+Route::prefix('v1')->group(function () {
+    Route::group(['middleware' => ['auth:api', 'scopesAny:external-api,user-api']], function () {
+        Route::get('me', [AuthController::class, 'getUserProfile']);
+        Route::apiResource('orders', OrdersController::class)->only(['index', 'store']);
+        Route::apiResource('phone-numbers', OrderItemsController::class)->only(['index']);
+        // Transactions
+        Route::get('transactions', [TransactionController::class, 'index']);
 
-    // Payments
-    Route::get('payments', [PaymentController::class, 'index']);
-    Route::post('payments', [PaymentController::class, 'store']);
-    Route::get('payments/currencies', [NowPaymentController::class, 'getCurrencies']);
-    Route::post('payments/estimate', [NowPaymentController::class, 'estimate']);
-    Route::get('payments/{payment}', [PaymentController::class, 'show']);
+        // Payments
+        Route::get('payments', [PaymentController::class, 'index']);
+        Route::post('payments', [PaymentController::class, 'store']);
+        Route::get('payments/currencies', [NowPaymentController::class, 'getCurrencies']);
+        Route::post('payments/estimate', [NowPaymentController::class, 'estimate']);
+    });
 });

@@ -47,6 +47,10 @@ Route::get('/terms', function () {
     return view('clinic.terms');
 })->name('clinic.terms');
 
+Route::get('/v1/docs', function () {
+    return view('clinic.docs');
+})->name('clinic.docs');
+
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });
