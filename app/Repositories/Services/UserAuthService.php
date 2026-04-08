@@ -38,10 +38,10 @@ class UserAuthService
 
     public function forgotPassword(string $email)
     {
-        if (Cache::get('otp_attempts_' . $email, 1) > env('MAX_EMAIL_ATTEMPTS', 3)) {
-            return false; // Exceeded max attempts
+        if ($throttleError = $this->throttleOtp($email)) {
+            return ['error' => $throttleError];
         }
-        Cache::increment('otp_attempts_' . $email, 1, now()->addMinutes(60));
+
         return $this->userAuthRepository->forgotPassword($email);
     }
 
@@ -55,17 +55,40 @@ class UserAuthService
         return $this->userAuthRepository->verifyEmail($otp, $email);
     }
 
-    public function resendOtp(string $email): bool
+    public function resendOtp(string $email): array|bool
     {
-        if (Cache::get('otp_attempts_' . $email, 1) > env('MAX_EMAIL_ATTEMPTS', 3)) {
-            return false; // Exceeded max attempts
+        if ($throttleError = $this->throttleOtp($email)) {
+            return ['error' => $throttleError];
         }
         $user = $this->userAuthRepository->regenerateOtp($email);
-        if (!$user) {
+        if (! $user) {
             return false;
         }
         EmailVerifyNotificationJob::dispatch($user);
+
         return true;
+    }
+
+    private function throttleOtp(string $email): ?string
+    {
+        $today = now()->toDateString();
+        $countKey = 'otp_daily_count_'.$email.'_'.$today;
+        $lastKey = 'otp_last_sent_'.$email;
+
+        $count = Cache::get($countKey, 0);
+        if ($count >= 5) {
+            return 'Maximum OTP requests reached for today.';
+        }
+
+        $lastSent = Cache::get($lastKey);
+        if ($lastSent && (time() - $lastSent) < 30) {
+            return 'Please wait 30 seconds before requesting another OTP.';
+        }
+
+        Cache::put($lastKey, time(), now()->addDay());
+        Cache::put($countKey, $count + 1, now()->endOfDay());
+
+        return null;
     }
 
     public function rotateApiKey(Request $request)

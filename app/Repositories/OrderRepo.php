@@ -29,9 +29,9 @@ class OrderRepo implements OrderInterface
     public function getAllOrders(array $filters): LengthAwarePaginator
     {
         return Order::when(
-                $filters['user_id'] ?? null,
-                fn($query, $user_id) => $query->where('user_id', $user_id)
-            )
+            $filters['user_id'] ?? null,
+            fn($query, $user_id) => $query->where('user_id', $user_id)
+        )
             ->when(
                 $filters['with_user'] ?? null,
                 fn($query) => $query->with('user')
@@ -76,12 +76,13 @@ class OrderRepo implements OrderInterface
     public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?int $user_id)
     {
         return Cache::remember('sum.orders_' . $from?->toDateString() . '_' . $to?->toDateString() . '_' . $user_id, 3600, function () use ($from, $to) {
-            return DB::table('orders')
+            $totalAmount = DB::table('orders')
                 ->where('status', 'completed')
                 ->when($from, fn($query) => $query->whereDate('orders.created_at', '>=', $from->toDateString()))
                 ->when($to, fn($query) => $query->whereDate('orders.created_at', '<=', $to->toDateString()))
                 ->selectRaw('SUM(orders.total_cent_price) as total_amount')
-                ->get();
+                ->get(['total_amount']);
+            return (int) $totalAmount[0]->total_amount;
         });
     }
 }

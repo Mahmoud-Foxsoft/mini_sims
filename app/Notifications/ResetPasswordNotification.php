@@ -20,7 +20,7 @@ class ResetPasswordNotification extends Notification
      */
     public function __construct(private User $user, private string $token)
     {
-        $this->url = env('APP_URL') . '/console/forgot-password?token=' . $this->token . '&email=' . $this->user->email;
+        $this->url = env('APP_URL') . '/dashboard/auth/reset-password?token=' . $this->token . '&email=' . $this->user->email;
     }
 
     /**

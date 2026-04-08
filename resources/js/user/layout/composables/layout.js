@@ -1,0 +1,55 @@
+import { computed, reactive } from 'vue';
+
+const layoutConfig = reactive({
+    darkTheme: false,
+    menuMode: 'static'
+});
+
+const layoutState = reactive({
+    staticMenuInactive: false,
+    overlayMenuActive: false,
+    mobileMenuActive: false,
+    menuHoverActive: false,
+    activePath: null
+});
+
+export function useLayout() {
+    const toggleDarkMode = () => {
+        layoutConfig.darkTheme = !layoutConfig.darkTheme;
+        document.documentElement.classList.toggle('app-dark');
+    };
+
+    const toggleMenu = () => {
+        if (isDesktop()) {
+            if (layoutConfig.menuMode === 'static') {
+                layoutState.staticMenuInactive = !layoutState.staticMenuInactive;
+            }
+
+            if (layoutConfig.menuMode === 'overlay') {
+                layoutState.overlayMenuActive = !layoutState.overlayMenuActive;
+            }
+        } else {
+            layoutState.mobileMenuActive = !layoutState.mobileMenuActive;
+        }
+    };
+
+    const hideMobileMenu = () => {
+        layoutState.mobileMenuActive = false;
+    };
+
+    const isDesktop = () => window.innerWidth > 991;
+
+    const isDarkTheme = computed(() => layoutConfig.darkTheme);
+    const hasOpenOverlay = computed(() => layoutState.overlayMenuActive || layoutState.mobileMenuActive);
+
+    return {
+        layoutConfig,
+        layoutState,
+        isDarkTheme,
+        toggleDarkMode,
+        toggleMenu,
+        hideMobileMenu,
+        isDesktop,
+        hasOpenOverlay
+    };
+}

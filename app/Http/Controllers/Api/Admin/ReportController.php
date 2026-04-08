@@ -30,7 +30,7 @@ class ReportController extends Controller
             new TotalObject('New User this Period', $totalUsers, 'users'),
             new TotalObject('Total Payments For Period', $totalPayments['total_amount'] ?? 0, 'payments'),
             new TotalObject('Total Users Who Made Payments', $totalPayments['user_count'], 'payments'),
-            new TotalObject('Total Orders Income For Period', $orderTotals->total_amount, 'orders'),
+            new TotalObject('Total Orders Income For Period', $orderTotals . ' USD', 'orders'),
         ];
         return $this->sendResponse(['totals' => $totals], 'Admin Report fetched successfully');
     }

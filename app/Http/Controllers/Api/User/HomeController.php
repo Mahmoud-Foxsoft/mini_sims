@@ -27,7 +27,7 @@ class HomeController extends Controller
     {
         $id = $request->user()->id;
         $totalPayments = round(PaymentFacade::sumAmountMonthly($id), 2) . ' USD';
-        $orders = round(OrderFacade::sumOrdersMonthly(now()->startOfMonth(),now()->endOfMonth(),$id)->first()->total_amount, 2) . ' USD';
+        $orders = round(OrderFacade::sumOrdersMonthly(now()->startOfMonth(),now()->endOfMonth(),$id), 2) . ' USD';
         $totals = [
             new TotalObject('Total Payments For Month', $totalPayments, 'payments'),
             new TotalObject('Total Orders For Month', $orders, 'orders'),

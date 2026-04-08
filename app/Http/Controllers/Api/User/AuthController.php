@@ -22,9 +22,10 @@ class AuthController extends Controller
         //     return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
         // }
         $user = UserAuthFacade::register($request->validated());
-        if (!$user) {
+        if (! $user) {
             return $this->sendError('Registration failed', ['error' => 'Unable to register user'], 500);
         }
+
         return $this->sendResponse([], 'User registered successfully');
     }
 
@@ -44,33 +45,37 @@ class AuthController extends Controller
         } elseif ($result === 'Email not verified') {
             return $this->sendError('Login failed', ['error' => 'Email not verified. Please verify your email before logging in.'], 403);
         }
+
         return $this->sendResponse($result, 'User logged in successfully');
     }
 
     public function logout(Request $request)
     {
         $result = UserAuthFacade::logout($request);
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('Logout failed', ['error' => 'Unable to logout user'], 500);
         }
+
         return $this->sendResponse($result, 'User logged out successfully');
     }
 
     public function refreshToken(Request $request)
     {
         $result = UserAuthFacade::refreshToken($request);
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('Token refresh failed', ['error' => 'Unable to refresh token'], 500);
         }
+
         return $this->sendResponse($result, 'Token refreshed successfully');
     }
 
     public function getUserProfile(Request $request)
     {
         $result = UserAuthFacade::getUserProfile($request);
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('User not found', ['error' => 'No user found'], 404);
         }
+
         return $this->sendResponse($result, 'User profile fetched successfully');
     }
 
@@ -81,9 +86,14 @@ class AuthController extends Controller
         // if (!$isValid) {
         //     return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
         // }
-        UserAuthFacade::forgotPassword($request->validated('email'));
+        $result = UserAuthFacade::forgotPassword($request->validated('email'));
+        if (is_array($result) && isset($result['error'])) {
+            return $this->sendError('Too many requests', ['error' => $result['error']], 429);
+        }
+
         return $this->sendResponse([], 'Password reset link sent successfully');
     }
+
     public function resetPassword(ResetPasswordRequest $request)
     {
         $validated = $request->validated();
@@ -92,9 +102,10 @@ class AuthController extends Controller
             $validated['password'],
             $validated['token']
         );
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('Password reset failed', ['error' => 'Invalid token or email'], 400);
         }
+
         return $this->sendResponse($result, 'Password reset successfully');
     }
 
@@ -104,9 +115,10 @@ class AuthController extends Controller
             $request->validated('otp'),
             $request->validated('email')
         );
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('Email verification failed', ['error' => 'Invalid OTP or email'], 400);
         }
+
         return $this->sendResponse($result, 'Email verified successfully');
     }
 
@@ -116,18 +128,23 @@ class AuthController extends Controller
             'email' => 'required|email',
         ]);
         $result = UserAuthFacade::resendOtp($request->input('email'));
-        if (!$result) {
-            return $this->sendError('Resend OTP failed', ['error' => 'Unable to resend OTP. Max attempts exceeded or email not found'], 400);
+        if (is_array($result) && isset($result['error'])) {
+            return $this->sendError('Too many requests', ['error' => $result['error']], 429);
         }
+        if (! $result) {
+            return $this->sendError('Resend OTP failed', ['error' => 'Unable to resend OTP. Email not found'], 400);
+        }
+
         return $this->sendResponse(null, 'OTP resent successfully');
     }
 
     public function rotateApiKey(Request $request)
     {
         $result = UserAuthFacade::rotateApiKey($request);
-        if (!$result) {
+        if (! $result) {
             return $this->sendError('API key rotation failed', ['error' => 'Unable to rotate API key'], 500);
         }
+
         return $this->sendResponse(['api_key' => $result], 'API key rotated successfully');
     }
 }

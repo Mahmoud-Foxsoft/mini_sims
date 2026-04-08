@@ -51,6 +51,10 @@ Route::get('/v1/docs', function () {
     return view('clinic.docs');
 })->name('clinic.docs');
 
+Route::view('/dashboard/{any?}', 'user.dashboard')
+    ->where('any', '.*')
+    ->name('user.dashboard');
+
 Route::fallback(function () {
     return response()->view('errors.404', [], 404);
 });

@@ -6,12 +6,25 @@
         "build": "vite build",
         "dev": "vite"
     },
+    "dependencies": {
+        "@primeuix/themes": "^2.0.0",
+        "pinia": "^3.0.3",
+        "primeicons": "^7.0.0",
+        "primevue": "^4.5.4",
+        "qrcode": "^1.5.3",
+        "tailwindcss-primeui": "^0.6.1",
+        "vue": "^3.4.34",
+        "vue-router": "^4.4.0"
+    },
     "devDependencies": {
+        "@primevue/auto-import-resolver": "^4.3.1",
         "@tailwindcss/vite": "^4.0.0",
+        "@vitejs/plugin-vue": "^6.0.5",
         "axios": ">=1.11.0 <=1.14.0",
         "concurrently": "^9.0.1",
         "laravel-vite-plugin": "^3.0.0",
         "tailwindcss": "^4.0.0",
+        "unplugin-vue-components": "^0.27.3",
         "vite": "^8.0.0"
     }
 }
