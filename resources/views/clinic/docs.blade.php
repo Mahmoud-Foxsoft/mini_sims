@@ -50,7 +50,6 @@
                         <a href="#post-payments">POST /payments</a>
                         <a href="#get-currencies">GET /payments/currencies</a>
                         <a href="#post-estimate">POST /payments/estimate</a>
-                        <a href="#get-payment">GET /payments/{payment}</a>
                         <a href="#errors">Error Responses</a>
                     </nav>
                 </aside>
