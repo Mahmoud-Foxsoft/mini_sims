@@ -23,7 +23,7 @@ class ReportController extends Controller
         $filters = (array) $request->input('filters');
         $from = Carbon::parse($filters['from']);
         $to = Carbon::parse($filters['to']);
-        $orderTotals = OrderFacade::sumOrdersMonthly($from, $to, null, null);
+        $orderTotals = OrderFacade::sumOrdersMonthly($from, $to, null, null) / 1000;
         $totalPayments = PaymentFacade::sumAmountWithUserCount($from, $to)->first();
         $totalUsers = UserFacade::sumTotalUsersMonthly($from, $to) . '';
         $totals = [

@@ -27,6 +27,20 @@ const MyPreset = definePreset(Aura, {
             900: '{blue.900}',
             950: '{blue.950}'
         }
+    },
+    components: {
+        skeleton: {
+            colorScheme: {
+                dark: {
+                    root: {
+                        // Uses PrimeVue's dark gray surface token
+                        background: '{surface.700}', 
+                        // The shiny animation gradient over the background
+                        animationBackground: 'rgba(255, 255, 255, 0.04)' 
+                    }
+                }
+            }
+        }
     }
 });
 const app = createApp(App);
