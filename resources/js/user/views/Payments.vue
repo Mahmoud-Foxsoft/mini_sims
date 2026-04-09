@@ -1,8 +1,9 @@
 <script setup>
-import { onMounted, ref } from 'vue';
-import { useToast } from 'primevue/usetoast';
-import QRCode from 'qrcode';
-import { apiRequest } from '@/services/api';
+import { onMounted, ref } from "vue";
+import { useToast } from "primevue/usetoast";
+import QRCode from "qrcode";
+import { apiRequest } from "@/services/api";
+import { formatDate } from "@/services/date";
 
 const toast = useToast();
 const loading = ref(false);
@@ -13,22 +14,53 @@ const rows = ref(20);
 const createDialog = ref(false);
 const createLoading = ref(false);
 
+const statusFilter = ref(null);
+const createdDateFilter = ref(null);
+const statusOptions = [
+    { label: "All", value: null },
+    { label: "Finished", value: "finished" },
+    { label: "Waiting", value: "waiting" },
+    { label: "Confirming", value: "confirming" },
+    { label: "Sending", value: "sending" },
+    { label: "Refunded", value: "refunded" },
+];
+
 const amount = ref(null);
 const currency = ref(null);
 const currencies = ref([]);
 
 const receipt = ref(null);
-const receiptQr = ref('');
+const receiptQr = ref("");
+
+const buildQuery = (page) => {
+    const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("per_page", String(rows.value));
+    if (statusFilter.value) {
+        params.set("filters[status]", statusFilter.value);
+    }
+    const createdDate = formatDate(createdDateFilter.value);
+    if (createdDate) {
+        params.set("filters[created_date]", createdDate);
+    }
+    return params.toString();
+};
 
 const fetchPayments = async (page = 1) => {
     loading.value = true;
     try {
-        const data = await apiRequest(`/v1/payments?page=${page}`);
+        const query = buildQuery(page);
+        const data = await apiRequest(`/v1/payments?${query}`);
         payments.value = data.data || [];
         totalRecords.value = data.total || 0;
         rows.value = data.per_page || 20;
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Failed to load payments', detail: error.message, life: 4000 });
+        toast.add({
+            severity: "error",
+            summary: "Failed to load payments",
+            detail: error.message,
+            life: 4000,
+        });
     } finally {
         loading.value = false;
     }
@@ -36,17 +68,25 @@ const fetchPayments = async (page = 1) => {
 
 const fetchCurrencies = async () => {
     try {
-        const data = await apiRequest('/v1/payments/currencies');
-        currencies.value = (data.currencies || []).map((currencyCode) => ({ label: currencyCode, value: currencyCode }));
+        const data = await apiRequest("/v1/payments/currencies");
+        currencies.value = (data.currencies || []).map((currencyCode) => ({
+            label: currencyCode,
+            value: currencyCode,
+        }));
     } catch (error) {
-        toast.add({ severity: 'warn', summary: 'Currencies unavailable', detail: error.message, life: 3000 });
+        toast.add({
+            severity: "warn",
+            summary: "Currencies unavailable",
+            detail: error.message,
+            life: 3000,
+        });
     }
 };
 
 const openCreate = () => {
     createDialog.value = true;
     receipt.value = null;
-    receiptQr.value = '';
+    receiptQr.value = "";
     amount.value = null;
     currency.value = null;
     fetchCurrencies();
@@ -54,24 +94,41 @@ const openCreate = () => {
 
 const createPayment = async () => {
     if (!amount.value || !currency.value) {
-        toast.add({ severity: 'warn', summary: 'Missing details', detail: 'Enter amount and currency.', life: 3000 });
+        toast.add({
+            severity: "warn",
+            summary: "Missing details",
+            detail: "Enter amount and currency.",
+            life: 3000,
+        });
         return;
     }
     createLoading.value = true;
     try {
-        const data = await apiRequest('/v1/payments', {
-            method: 'POST',
+        const data = await apiRequest("/v1/payments", {
+            method: "POST",
             body: {
                 amount: amount.value,
-                currency: currency.value
-            }
+                currency: currency.value,
+            },
         });
         receipt.value = data.payment || data;
-        receiptQr.value = receipt.value?.pay_address ? await QRCode.toDataURL(receipt.value.pay_address) : '';
-        toast.add({ severity: 'success', summary: 'Payment created', detail: 'Use the address to complete payment.', life: 4000 });
+        receiptQr.value = receipt.value?.pay_address
+            ? await QRCode.toDataURL(receipt.value.pay_address)
+            : "";
+        toast.add({
+            severity: "success",
+            summary: "Payment created",
+            detail: "Use the address to complete payment.",
+            life: 4000,
+        });
         fetchPayments();
     } catch (error) {
-        toast.add({ severity: 'error', summary: 'Payment failed', detail: error.message, life: 4000 });
+        toast.add({
+            severity: "error",
+            summary: "Payment failed",
+            detail: error.message,
+            life: 4000,
+        });
     } finally {
         createLoading.value = false;
     }
@@ -83,27 +140,43 @@ const onPage = (event) => {
     fetchPayments(event.page + 1);
 };
 
+const applyFilters = () => {
+    first.value = 0;
+    fetchPayments(1);
+};
+
+const clearFilters = () => {
+    statusFilter.value = null;
+    createdDateFilter.value = null;
+    applyFilters();
+};
+
 const statusSeverity = (status) => {
     switch (status) {
-        case 'finished':
-            return 'success';
-        case 'waiting':
-            return 'warning';
-        case 'confirming':
-            return 'info';
-        case 'sending':
-            return 'info';
-        case 'refunded':
-            return 'danger';
+        case "finished":
+            return "success";
+        case "waiting":
+            return "warning";
+        case "confirming":
+            return "info";
+        case "sending":
+            return "info";
+        case "refunded":
+            return "danger";
         default:
-            return 'secondary';
+            return "secondary";
     }
 };
 
 const copyAddress = async () => {
     if (!receipt.value?.pay_address) return;
     await navigator.clipboard.writeText(receipt.value.pay_address);
-    toast.add({ severity: 'success', summary: 'Copied', detail: 'Address copied to clipboard.', life: 2000 });
+    toast.add({
+        severity: "success",
+        summary: "Copied",
+        detail: "Address copied to clipboard.",
+        life: 2000,
+    });
 };
 
 onMounted(() => fetchPayments());
@@ -121,7 +194,47 @@ onMounted(() => fetchPayments());
 
         <Card class="shadow-sm">
             <template #content>
+                <div class="flex flex-col gap-3 mb-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="flex flex-col gap-2">
+                            <label class="font-medium">Status</label>
+                            <Dropdown
+                                v-model="statusFilter"
+                                :options="statusOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="All statuses"
+                                class="w-full"
+                            />
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <label class="font-medium">Created date</label>
+                            <Calendar
+                                v-model="createdDateFilter"
+                                dateFormat="yy-mm-dd"
+                                showIcon
+                                class="w-full"
+                                inputClass="w-full"
+                                placeholder="YYYY-MM-DD"
+                            />
+                        </div>
+                        <div class="flex items-end gap-2">
+                            <Button
+                                label="Apply"
+                                icon="pi pi-filter"
+                                @click="applyFilters"
+                            />
+                            <Button
+                                label="Clear"
+                                icon="pi pi-times"
+                                severity="secondary"
+                                @click="clearFilters"
+                            />
+                        </div>
+                    </div>
+                </div>
                 <DataTable
+                    lazy
                     :value="payments"
                     :loading="loading"
                     :paginator="true"
@@ -130,39 +243,140 @@ onMounted(() => fetchPayments());
                     :first="first"
                     @page="onPage"
                 >
-                    <Column field="transaction_id" header="Transaction" style="min-width: 14rem" />
-                    <Column field="amount" header="Amount" style="min-width: 8rem" />
-                    <Column field="currency" header="Currency" style="min-width: 8rem" />
-                    <Column field="status" header="Status" style="min-width: 10rem">
+                    <Column
+                        field="transaction_id"
+                        header="Transaction"
+                        style="min-width: 14rem"
+                    />
+                    <Column
+                        field="amount"
+                        header="Amount"
+                        style="min-width: 8rem"
+                    />
+                    <Column
+                        field="currency"
+                        header="Currency"
+                        style="min-width: 8rem"
+                    />
+                    <Column
+                        field="status"
+                        header="Status"
+                        style="min-width: 10rem"
+                    >
                         <template #body="slotProps">
-                            <Tag :value="slotProps.data.status" :severity="statusSeverity(slotProps.data.status)" />
+                            <Tag
+                                :value="slotProps.data.status"
+                                :severity="
+                                    statusSeverity(slotProps.data.status)
+                                "
+                            />
                         </template>
                     </Column>
-                    <Column field="paid_amount" header="Paid" style="min-width: 10rem" />
-                    <Column field="created_at" header="Created" style="min-width: 12rem" />
+                    <Column
+                        field="paid_amount"
+                        header="Paid"
+                        style="min-width: 10rem"
+                    />
+                    <Column header="Created" style="min-width: 12rem">
+                        <template #body="slotProps">
+                            {{ formatDate(slotProps.data.created_at) }}
+                        </template>
+                    </Column>
+                    <template #empty>
+                        <div
+                            v-if="!loading"
+                            class="flex flex-col items-center justify-center p-8 text-gray-500"
+                        >
+                            <i
+                                class="pi pi-inbox text-4xl mb-4 text-gray-400"
+                            ></i>
+                            <p class="text-lg font-medium">
+                                No Payments found.
+                            </p>
+                            <p class="text-sm">
+                                Try adjusting your filters or check back later.
+                            </p>
+                        </div>
+                        <div
+                            v-else
+                            class="flex flex-col items-center justify-center p-8 text-gray-500"
+                        >
+                            <i
+                                class="pi pi-spinner pi-spin text-4xl mb-4 text-blue-500 dark:text-blue-400"
+                            ></i>
+                            <p class="text-lg font-medium">
+                                Loading payments...
+                            </p>
+                            <p class="text-sm">
+                                Please wait while we fetch your data.
+                            </p>
+                        </div>
+                    </template>
                 </DataTable>
             </template>
         </Card>
 
-        <Dialog v-model:visible="createDialog" modal header="Create payment" :style="{ width: '32rem' }">
+        <Dialog
+            v-model:visible="createDialog"
+            modal
+            header="Create payment"
+            :style="{ width: '32rem' }"
+        >
             <div class="flex flex-col gap-4">
                 <div class="flex flex-col gap-2">
-                    <label for="payment-amount" class="font-medium">Amount</label>
-                    <InputNumber id="payment-amount" v-model="amount" :min="1" mode="decimal" placeholder="Amount" class="w-full" inputClass="w-full" />
+                    <label for="payment-amount" class="font-medium"
+                        >Amount</label
+                    >
+                    <InputNumber
+                        id="payment-amount"
+                        v-model="amount"
+                        :min="1"
+                        mode="decimal"
+                        placeholder="Amount"
+                        class="w-full"
+                        inputClass="w-full"
+                    />
                 </div>
                 <div class="flex flex-col gap-2">
-                    <label for="payment-currency" class="font-medium">Currency</label>
-                    <Dropdown id="payment-currency" v-model="currency" :options="currencies" optionLabel="label" optionValue="value" placeholder="Select currency" class="w-full" />
+                    <label for="payment-currency" class="font-medium"
+                        >Currency</label
+                    >
+                    <Dropdown
+                        id="payment-currency"
+                        v-model="currency"
+                        :options="currencies"
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Select currency"
+                        class="w-full"
+                    />
                 </div>
-                <Button label="Create payment" :loading="createLoading" @click="createPayment" />
+                <Button
+                    label="Create payment"
+                    :loading="createLoading"
+                    @click="createPayment"
+                />
             </div>
 
-            <div v-if="receipt" class="mt-6 p-4 border border-gray-200 rounded-lg">
+            <div
+                v-if="receipt"
+                class="mt-6 p-4 border border-gray-200 rounded-lg"
+            >
                 <h4 class="font-semibold mb-2">Payment address</h4>
                 <p class="text-sm break-all">{{ receipt.pay_address }}</p>
                 <div class="flex items-center gap-2 mt-3">
-                    <Button label="Copy address" icon="pi pi-copy" size="small" severity="secondary" @click="copyAddress" />
-                    <span v-if="receipt.pay_amount" class="text-sm text-gray-600">Pay: {{ receipt.pay_amount }}</span>
+                    <Button
+                        label="Copy address"
+                        icon="pi pi-copy"
+                        size="small"
+                        severity="secondary"
+                        @click="copyAddress"
+                    />
+                    <span
+                        v-if="receipt.pay_amount"
+                        class="text-sm text-gray-600"
+                        >Pay: {{ receipt.pay_amount }}</span
+                    >
                 </div>
                 <div v-if="receiptQr" class="mt-4 flex justify-center">
                     <img :src="receiptQr" alt="Payment QR" class="w-40 h-40" />
