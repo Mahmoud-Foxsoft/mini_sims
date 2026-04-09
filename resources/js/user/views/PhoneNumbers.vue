@@ -182,7 +182,7 @@ onMounted(() => fetchNumbers());
                                 :class="
                                     slotProps.data.isActive
                                         ? 'bg-green-500 text-white'
-                                        : 'bg-gray-100 dark:bg-gray-800 dark:text-gray-200'
+                                        : 'bg-gray-100 dark:bg-gray-900 dark:text-gray-200'
                                 "
                             >
                                 {{ slotProps.data.messages.length }}
@@ -236,7 +236,7 @@ onMounted(() => fetchNumbers());
                         </template>
                     </Column>
                     <template #expansion="slotProps">
-                        <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div class="p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
                             <h4 class="font-semibold mb-2">Messages</h4>
                             <div
                                 v-if="
@@ -248,11 +248,26 @@ onMounted(() => fetchNumbers());
                                 <div
                                     v-for="message in slotProps.data.messages"
                                     :key="message.id"
-                                    class="p-3 border border-gray-200 rounded-md"
+                                    class="p-3 border border-gray-200 dark:border-gray-700 rounded-md"
                                 >
                                     <p class="text-sm">{{ message.message }}</p>
                                     <p class="text-xs text-gray-500 mt-1">
-                                        {{ message.created_at }}
+                                        {{
+                                            new Intl.DateTimeFormat("en-CA", {
+                                                year: "numeric",
+                                                month: "2-digit",
+                                                day: "2-digit",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            })
+                                                .format(
+                                                    new Date(
+                                                        message.created_at,
+                                                    ),
+                                                )
+                                                .replace(", ", " ")
+                                        }}
                                     </p>
                                 </div>
                             </div>

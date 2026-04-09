@@ -21,6 +21,6 @@ class UserController extends Controller
         if (!$updated) {
             return $this->sendError('Update failed', ['error' => 'Unable to update user'], 500);
         }
-        return $this->sendResponse($updated, 'User updated successfully');
+        return $this->sendResponse($request->user()->fresh(), 'User updated successfully');
     }
 }

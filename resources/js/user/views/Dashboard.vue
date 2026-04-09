@@ -62,14 +62,14 @@ onMounted(fetchTotals);
                 <template #title>Next steps</template>
                 <template #content>
                     <div class="grid gap-3">
-                        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div>
                                 <p class="font-medium">Create a payment</p>
                                 <p class="text-sm text-gray-500">Top up your balance with a new payment.</p>
                             </div>
                             <Button label="Create" size="small" @click="router.push('/payments')" />
                         </div>
-                        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200">
+                        <div class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700">
                             <div>
                                 <p class="font-medium">Review recent orders</p>
                                 <p class="text-sm text-gray-500">See the latest orders and status updates.</p>

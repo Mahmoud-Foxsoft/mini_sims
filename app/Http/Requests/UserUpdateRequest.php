@@ -26,6 +26,7 @@ class UserUpdateRequest extends FormRequest
         return [
             'name' => 'sometimes|string|max:255',
             'password' => 'sometimes|string|min:8|confirmed',
+            'webhook_url' => 'sometimes|url',
         ];
     }
 }

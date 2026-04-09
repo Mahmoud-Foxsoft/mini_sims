@@ -1,11 +1,14 @@
 <script setup>
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useLayout } from '@/layout/composables/layout';
 import { useAuthStore } from '@/stores/authStore';
+import { usePaymentDialogStore } from '@/stores/paymentDialogStore';
+import PaymentDialog from '@/components/PaymentDialog.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
+const paymentDialogStore = usePaymentDialogStore();
 const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
 
 const menu = ref();
@@ -27,6 +30,15 @@ const menuItems = [
 
 const toggleUserMenu = (event) => {
     menu.value.toggle(event);
+};
+
+const balanceUsd = computed(() => {
+    const cents = authStore.user?.balance_cents ?? 0;
+    return (cents / 1000).toFixed(2);
+});
+
+const openPaymentDialog = () => {
+    paymentDialogStore.open();
 };
 </script>
 
@@ -60,6 +72,13 @@ const toggleUserMenu = (event) => {
         </div>
 
         <div class="layout-topbar-actions">
+            <div class="hidden md:flex items-center gap-2 mr-2">
+                <span class="text-xs text-gray-500">Balance</span>
+                <span class="text-sm font-semibold">${{ balanceUsd }}</span>
+                <button type="button" class="layout-topbar-action" @click="openPaymentDialog">
+                    <i class="pi pi-plus" />
+                </button>
+            </div>
             <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
                 <i :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']" />
             </button>
@@ -68,5 +87,6 @@ const toggleUserMenu = (event) => {
             </button>
             <Menu ref="menu" :model="menuItems" popup />
         </div>
+        <PaymentDialog />
     </div>
 </template>

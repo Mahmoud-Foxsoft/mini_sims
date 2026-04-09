@@ -26,6 +26,6 @@ class OrderItem extends Model
 
     public function messages()
     {
-        return $this->hasMany(PhoneMessage::class);
+        return $this->hasMany(PhoneMessage::class)->latest();
     }
 }

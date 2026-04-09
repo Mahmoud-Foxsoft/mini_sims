@@ -106,7 +106,7 @@ onMounted(loadProfile);
 
         <Dialog v-model:visible="apiKeyDialog" header="New API key" modal :style="{ width: '30rem' }">
             <p class="text-sm text-gray-600">Copy and store this key. It will not be shown again.</p>
-            <div class="mt-4 p-3 border border-gray-200 rounded-lg break-all">
+            <div class="mt-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg break-all">
                 {{ apiKey }}
             </div>
             <div class="mt-4 flex justify-end">

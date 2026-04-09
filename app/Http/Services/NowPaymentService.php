@@ -37,12 +37,13 @@ class NowPaymentService
     public function getCurrencies(): Collection
     {
         try {
-            return Cache::rememberForever(self::CACHE_KEY . 'currencies', function () {
-                return  Http::nowPayments()
+            $currenciesArray = Cache::rememberForever(self::CACHE_KEY . 'currencies', function () {
+                return Http::nowPayments()
                     ->retry(3, 200)
                     ->get('/merchant/coins')
-                    ->collect('selectedCurrencies');
+                    ->json('selectedCurrencies', []);
             });
+            return collect($currenciesArray);
         } catch (\Throwable $th) {
             Log::error('Error fetching currencies from NowPayments', [
                 'exception' => $th->getMessage(),

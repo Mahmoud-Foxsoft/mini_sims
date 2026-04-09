@@ -41,9 +41,9 @@ class DatabaseSeeder extends Seeder
         //         'Test Debit' . $i,
         //     );
         // }
-        Order::factory(10)->create();
+        // Order::factory(10)->create();
         // OrderItem::factory(10)->create();
-        // PhoneMessage::factory(10)->create();
+        PhoneMessage::factory(10)->create();
         // $this->call(
         //     [
         //         SettingSeeder::class,

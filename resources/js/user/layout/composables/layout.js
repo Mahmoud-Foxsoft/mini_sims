@@ -1,9 +1,37 @@
 import { computed, reactive } from 'vue';
 
+const THEME_KEY = 'theme';
+
+const getStoredTheme = () => {
+    try {
+        return localStorage.getItem(THEME_KEY);
+    } catch (error) {
+        return null;
+    }
+};
+
+const setStoredTheme = (value) => {
+    try {
+        localStorage.setItem(THEME_KEY, value);
+    } catch (error) {
+        // ignore storage errors
+    }
+};
+
+const applyThemeClass = (isDark) => {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('app-dark', isDark);
+};
+
+const storedTheme = getStoredTheme();
+const initialDark = storedTheme === 'dark';
+
 const layoutConfig = reactive({
-    darkTheme: false,
+    darkTheme: initialDark,
     menuMode: 'static'
 });
+
+applyThemeClass(initialDark);
 
 const layoutState = reactive({
     staticMenuInactive: false,
@@ -16,7 +44,8 @@ const layoutState = reactive({
 export function useLayout() {
     const toggleDarkMode = () => {
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
-        document.documentElement.classList.toggle('app-dark');
+        applyThemeClass(layoutConfig.darkTheme);
+        setStoredTheme(layoutConfig.darkTheme ? 'dark' : 'light');
     };
 
     const toggleMenu = () => {
