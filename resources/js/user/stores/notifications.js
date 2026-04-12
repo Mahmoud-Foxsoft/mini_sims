@@ -1,14 +1,10 @@
 import { defineStore } from "pinia";
-import { apiRequest } from "@/services/api";
-import { useToast } from "primevue/usetoast";
-
+// import { apiRequest } from "@/services/api";
 import {
     notificationsSupported,
     requestFirebaseToken,
     subscribeToForegroundMessages,
 } from "@/services/notifications";
-
-const toast = useToast();
 
 const PROMPT_KEY = "user_notifications_prompt";
 const TOKEN_KEY = "user_notifications_token";
@@ -27,13 +23,13 @@ export const useNotificationStore = defineStore("user-notifications", {
                 ? window.localStorage.getItem(TOKEN_KEY)
                 : null,
         initialized: false,
-        isAuthenticated: false,
         unsubscribes: [],
     }),
     getters: {
         canPrompt(state) {
+            console.log(state.permission, state.promptDismissed);
+            
             return (
-                state.isAuthenticated &&
                 notificationsSupported() &&
                 state.permission === "default" &&
                 !state.promptDismissed
@@ -41,29 +37,31 @@ export const useNotificationStore = defineStore("user-notifications", {
         },
     },
     actions: {
-        setAuthenticated(value) {
-            this.isAuthenticated = value;
-        },
-        async bootstrap() {
+        // 1. Pass the toast instance in here
+        async bootstrap(toast) { 
             if (this.initialized || !notificationsSupported()) {
                 return;
             }
             this.permission = Notification.permission;
             this.initialized = true;
+            
             const unsubscribe = await subscribeToForegroundMessages(
                 (payload) => {
-                    const title =
-                        payload?.notification?.title ?? "New notification";
-                    const body =
-                        payload?.notification?.body ?? "You have a new update";
-                    toast.add({
-                        severity: "info",
-                        summary: title,
-                        detail: body,
-                        life: 4000,
-                    });
+                    const title = payload?.notification?.title ?? "New notification";
+                    const body = payload?.notification?.body ?? "You have a new update";
+                    
+                    // 2. Safely use the passed toast instance
+                    if (toast) {
+                        toast.add({
+                            severity: "info",
+                            summary: title,
+                            detail: body,
+                            life: 4000,
+                        });
+                    }
                 },
             );
+            
             if (typeof unsubscribe === "function") {
                 this.unsubscribes.push(unsubscribe);
             }
@@ -77,32 +75,43 @@ export const useNotificationStore = defineStore("user-notifications", {
                 window.localStorage.setItem(PROMPT_KEY, "dismissed");
             }
         },
-        async enableNotifications() {
+        // 3. Pass the toast instance in here as well
+        async enableNotifications(toast) {
             if (!notificationsSupported()) {
                 return;
             }
             try {
                 const permission = await Notification.requestPermission();
                 this.permission = permission;
+                
                 if (permission !== "granted") {
-                    useToast().error(
-                        "Notifications are disabled in your browser settings.",
-                    );
+                    if (toast) {
+                        toast.add({ severity: 'error', summary: 'Error', detail: "Notifications are disabled in your browser settings.", life: 4000 });
+                    }
                     this.dismissPrompt();
                     return;
                 }
+                
                 const token = await requestFirebaseToken();
                 if (!token) {
-                    useToast().error("Unable to register push notifications.");
+                    if (toast) {
+                        toast.add({ severity: 'error', summary: 'Error', detail: "Unable to register push notifications.", life: 4000 });
+                    }
                     return;
                 }
+                
                 console.log(token);
                 await this.registerToken(token);
                 this.dismissPrompt();
-                useToast().success("Push notifications enabled.");
+                
+                if (toast) {
+                    toast.add({ severity: 'success', summary: 'Success', detail: "Push notifications enabled.", life: 3000 });
+                }
             } catch (error) {
                 console.error("Notification permission failed", error);
-                useToast().error("Unable to enable notifications.");
+                if (toast) {
+                    toast.add({ severity: 'error', summary: 'Error', detail: "Unable to enable notifications.", life: 4000 });
+                }
             }
         },
         async refreshToken() {
