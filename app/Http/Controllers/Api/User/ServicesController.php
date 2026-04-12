@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\User;
 
 use App\Http\Controllers\Controller;
 use App\Http\DTOs\TotalObject;
+use App\Http\Services\PhoneServiceService;
 use App\Repositories\Facades\OrderFacade;
 use App\Repositories\Facades\PaymentFacade;
 use Illuminate\Http\Request;
@@ -18,13 +19,9 @@ class ServicesController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $id = $request->user()->id;
-        $totalPayments = round(PaymentFacade::sumAmountMonthly($id), 2) . ' USD';
-        $orders = round(OrderFacade::sumOrdersMonthly(now()->startOfMonth(),now()->endOfMonth(),$id), 2) . ' USD';
-        $totals = [
-            new TotalObject('Total Payments For Month', $totalPayments, 'payments'),
-            new TotalObject('Total Orders For Month', $orders, 'orders'),
-        ];
-        return $this->sendResponse(['totals' => $totals], 'User home fetched successfully');
+        $services = PhoneServiceService::getPhoneServices((array) $request->input('filters', []));
+        return $this->sendResponse([
+            'services' => $services,
+        ], 'Phone services retrieved successfully');
     }
 }

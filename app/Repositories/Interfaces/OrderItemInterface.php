@@ -11,4 +11,5 @@ interface OrderItemInterface
     public function create(array $data);
     public function update(OrderItem $orderItem, array $data);
     public function delete(OrderItem $orderItem);
+    public function cancel(OrderItem $orderItem);
 }

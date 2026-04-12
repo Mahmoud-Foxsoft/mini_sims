@@ -69,7 +69,7 @@ class UserRepo implements UserInterface
     public function addBalance(User $user, float $amount): bool
     {
         try {
-            $user->increment('balance', $amount);
+            $user->increment('balance_cents', $amount);
             return true;
         } catch (\Throwable $th) {
             Log::error('Error adding balance', [$th->getMessage()]);
@@ -79,7 +79,7 @@ class UserRepo implements UserInterface
 
     public function checkBalance(User $user, float $amount): bool
     {
-        return $user->balance >= $amount;
+        return $user->balance_cents / 100 >= $amount;
     }
 
     public function sumTotalUsersMonthly(?Carbon $from, ?Carbon $to): int

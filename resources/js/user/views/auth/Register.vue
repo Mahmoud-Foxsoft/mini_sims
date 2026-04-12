@@ -58,7 +58,7 @@ const submit = async () => {
 
 <template>
     <div
-        class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen min-w-[100vw] overflow-hidden"
+        class="bg-surface-50 dark:bg-surface-950 flex items-center justify-center min-h-screen max-w-dvw overflow-hidden"
     >
         <div class="flex flex-col items-center justify-center">
             <div

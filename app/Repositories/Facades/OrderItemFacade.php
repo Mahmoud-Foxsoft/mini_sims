@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static mixed create(array $data)
  * @method static mixed update(OrderItem $orderItem, array $data)
  * @method static mixed delete(OrderItem $orderItem)
+ * @method static mixed cancel(OrderItem $orderItem)
  * 
  * @see \App\Repositories\Services\OrderItemService
  */

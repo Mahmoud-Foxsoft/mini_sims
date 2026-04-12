@@ -194,20 +194,14 @@
 
         <div class="container" data-aos="fade-up" data-aos-delay="100">
             <div class="row gy-4">
-                {{-- @foreach ($services ?? [] as $index => $service)
-          <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ 200 + ($index * 50) }}">
-            <div class="service-item">
-              <div class="service-content">
-                <h3>{{ $service['name'] ?? '' }}</h3>
-                <p>{{ $service_price_label }} {{ $service['price'] ?? '' }}</p>
-                <a href="{{ route('clinic.service', $service['slug'] ?? '') }}" class="service-btn">
-                  <span>{{ $service_card_cta }}</span>
-                  <i class="fas fa-arrow-right"></i>
-                </a>
-              </div>
-            </div>
-          </div>
-        @endforeach --}}
+                <div class="col-lg-12">
+                    @include('clinic.partials.services', ['limit' => 5])
+                </div>
+                <div class="d-flex justify-content-end mt-3">
+                    <a href="{{ route('clinic.services') }}" class="btn btn-outline-primary btn-sm">
+                        View All Services <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
             </div>
         </div>
     </section>

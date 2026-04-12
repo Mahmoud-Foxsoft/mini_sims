@@ -4,7 +4,7 @@ import { useLayout } from '@/layout/composables/layout';
 import AppFooter from './AppFooter.vue';
 import AppSidebar from './AppSidebar.vue';
 import AppTopbar from './AppTopbar.vue';
-import NotificationPrompt from '@/components/NotificationPrompt.vue';
+import CartDialog from '@/components/CartDialog.vue';
 
 const { layoutConfig, layoutState, hideMobileMenu } = useLayout();
 
@@ -31,5 +31,7 @@ const containerClass = computed(() => {
         </div>
         <div class="layout-mask" @click="hideMobileMenu" />
     </div>
-    <NotificationPrompt />
+    <ConfirmDialog group="confirm-dialog"></ConfirmDialog>
+    <ConfirmPopup group="confirm-popup"></ConfirmPopup>
+    <CartDialog />
 </template>

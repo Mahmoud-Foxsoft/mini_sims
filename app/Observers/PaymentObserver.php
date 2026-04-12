@@ -21,7 +21,7 @@ class PaymentObserver
     public function created(Payment $payment)
     {
         if ($payment->status === Payment::FINISHED_STATUS) {
-            UserFacade::addBalance($payment->user, $payment->amount);
+            TransactionFacade::createCredit($payment->user, $payment->amount * 100, 'Payment Successed', $payment->transaction_id);
         }
     }
 

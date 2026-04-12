@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Http\Services\PhoneServiceService;
 use App\Repositories\Facades\SettingFacade;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\View;
@@ -50,6 +51,11 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['clinic.*', 'errors.404'], function ($view) {
             $settings = SettingFacade::getCached();
             $view->with($settings);
+        });
+
+        View::composer(['clinic.home','clinic.services'], function ($view) {
+            $services = PhoneServiceService::getPhoneServices();
+            $view->with(['services' => $services]);
         });
     }
 }

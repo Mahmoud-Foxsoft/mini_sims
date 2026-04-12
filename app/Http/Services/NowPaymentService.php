@@ -111,18 +111,13 @@ class NowPaymentService
      */
     public function createPayment(float $price_amount, string $pay_currency, User $user): array
     {
-        $app = config('app.name') . '_';
-        $unique_id = $app . uniqid('order_' . $user->id);
         $fee = (int) config('services.nowPayments.fee', 1.05);
         try {
             $response = Http::centralServer()
                 ->retry(3, 200)
                 ->post(config('services.centralServer.payment_url'), [
-                    "price_amount" => $fee * $price_amount, // 5% fee for the payments
-                    "price_currency" => 'usd',
-                    "pay_currency" => $pay_currency,
-                    "order_id" => $unique_id,
-                    "order_description" => "Payment for user: {$user->email} at {$app}",
+                    "amount" => $fee * $price_amount,
+                    "currency" => $pay_currency,
                 ])->json();
             $hasCreated = true;
         } catch (\Throwable $th) {
@@ -138,7 +133,7 @@ class NowPaymentService
         return [
             'pay_address' => $response['pay_address'] ?? null,
             'pay_amount' => $response['pay_amount'],
-            'transaction_id' => $unique_id,
+            'transaction_id' => $response['payment_request_id'] ?? null,
             'hasCreated' => $hasCreated,
         ];
     }

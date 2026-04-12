@@ -1,4 +1,3 @@
-
 <header id="header" class="header fixed-top">
 
     <div class="topbar d-flex align-items-center dark-background">
@@ -45,6 +44,8 @@
                     </li>
                     <li><a href="{{ route('clinic.contact') }}"
                             class="{{ request()->routeIs('clinic.contact') ? 'active' : '' }}">Contact Us</a>
+                    </li>
+                    <li><a href="/dashboard/auth/login">Dashboard</a>
                     </li>
                 </ul>
                 <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>

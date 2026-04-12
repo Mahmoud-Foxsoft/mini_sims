@@ -32,4 +32,7 @@ class OrderItemService
     public function delete(OrderItem $orderItem) {
         return $this->repo->delete($orderItem);
     }
+    public function cancel(OrderItem $orderItem) {
+        return $this->repo->cancel($orderItem);
+    }
 }

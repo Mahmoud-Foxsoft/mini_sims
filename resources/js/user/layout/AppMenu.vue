@@ -17,6 +17,11 @@ const model = ref([
         label: 'Services',
         items: [
             {
+                label: 'Services',
+                icon: 'pi pi-globe',
+                to: '/services'
+            },
+            {
                 label: 'Orders',
                 icon: 'pi pi-shopping-cart',
                 to: '/orders'

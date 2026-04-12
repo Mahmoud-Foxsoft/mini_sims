@@ -46,10 +46,8 @@
                         <a href="#get-orders">GET /orders</a>
                         <a href="#get-phone-numbers">GET /phone-numbers</a>
                         <a href="#get-transactions">GET /transactions</a>
+                        <a href="#get-services">GET /services</a>
                         <a href="#get-payments">GET /payments</a>
-                        <a href="#post-payments">POST /payments</a>
-                        <a href="#get-currencies">GET /payments/currencies</a>
-                        <a href="#post-estimate">POST /payments/estimate</a>
                         <a href="#errors">Error Responses</a>
                     </nav>
                 </aside>
@@ -289,7 +287,34 @@
   "message": "Transactions fetched successfully"
 }</code></pre>
                     </div>
+                    <div id="get-services">
+                        <h3>GET /services</h3>
+                        <p>Get available phone services.</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/services?filters[name]=service 1" \
+  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+    "success": true,
+    "data": {
+        "services": [
+            {
+                "name": "Service 1",
+                "code": "service_1",
+                "price": 1.5,
+                "available": true
+            },
+            {
+                "name": "Service 10",
+                "code": "service_10",
+                "price": 15,
+                "available": true
+            }
+          ]
+    },
+    "message": "Phone services retrieved successfully"
+}</code></pre>
+                    </div>
                     <div id="get-payments">
                         <h3>GET /payments</h3>
                         <p>List payments.</p>
@@ -346,84 +371,6 @@
     "total": 1
   },
   "message": "Payments fetched successfully"
-}</code></pre>
-                    </div>
-
-                    <div id="post-payments">
-                        <h3>POST /payments</h3>
-                        <p>Create a payment request.</p>
-                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/payments" \
-  -H "Authorization: Bearer &lt;token&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 50,
-    "currency": "USD",
-    "paid_amount": 50
-  }'</code></pre>
-  <h4>Success Responses</h4>
-  <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-  <pre><code class="language-json">{
-    "success": true,
-    "message": "Operation completed successfully.",
-    "data": {
-      // Expected response data here
-    }
-  }</code></pre>
-</div>
-                    <div id="get-currencies">
-                        <h3>GET /payments/currencies</h3>
-                        <p>Returns supported currencies.</p>
-                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments/currencies" \
-  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
-   <h4>Success Responses</h4>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "currencies": [
-            "BTC",
-            "LTC",
-            "ETH",
-            "MATIC",
-            "BCH",
-            "BNBMAINNET",
-            "BUSDBSC",
-            "SOL",
-            "BUSD",
-            "USDC",
-            "USDTBSC",
-            "USDTERC20",
-            "USDCBSC"
-        ]
-    },
-    "message": "currencies fetched successfully"
-}</code></pre>
-
-                    </div>
-
-                    <div id="post-estimate">
-                        <h3>POST /payments/estimate</h3>
-                        <p>Estimate the payment amount in a selected currency.</p>
-                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/payments/estimate" \
-  -H "Authorization: Bearer &lt;token&gt;" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "amount": 50,
-    "currency": "USD"
-  }'</code></pre>
-              <h4>Success Responses</h4>
-            <p>A standard successful response will return a 200 OK status code with the following JSON structure.</p>
-            <pre><code class="language-json">{
-    "success": true,
-    "data": {
-        "data": {
-            "currency_from": "usd",
-            "amount_from": 671.622,
-            "currency_to": "btc",
-            "estimated_amount": "0.00937731"
-        }
-    },
-    "message": "estimated successfully"
 }</code></pre>
                     </div>
 

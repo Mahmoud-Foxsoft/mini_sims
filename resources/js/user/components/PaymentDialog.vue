@@ -45,7 +45,7 @@ const resetForm = () => {
 const fetchCurrencies = async () => {
     if (currencies.value.length) return;
     try {
-        const data = await apiRequest('/v1/payments/currencies');
+        const data = await apiRequest('/payments/currencies');
         currencies.value = (data.currencies || []).map((currencyCode) => ({
             label: currencyCode,
             value: currencyCode
@@ -79,7 +79,7 @@ const runEstimate = async () => {
     estimateError.value = '';
 
     try {
-        const data = await apiRequest('/v1/payments/estimate', {
+        const data = await apiRequest('/payments/estimate', {
             method: 'POST',
             body: {
                 amount: amount.value,
@@ -111,7 +111,7 @@ const createPayment = async () => {
     }
     createLoading.value = true;
     try {
-        const data = await apiRequest('/v1/payments', {
+        const data = await apiRequest('/payments', {
             method: 'POST',
             body: {
                 amount: amount.value,

@@ -5,6 +5,7 @@ import { useLayout } from '@/layout/composables/layout';
 import { useAuthStore } from '@/stores/authStore';
 import { usePaymentDialogStore } from '@/stores/paymentDialogStore';
 import PaymentDialog from '@/components/PaymentDialog.vue';
+import CartButton from '@/components/CartButton.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -79,6 +80,7 @@ const openPaymentDialog = () => {
                     <i class="pi pi-plus" />
                 </button>
             </div>
+            <CartButton />
             <button type="button" class="layout-topbar-action" @click="toggleDarkMode">
                 <i :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']" />
             </button>

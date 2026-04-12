@@ -3,7 +3,9 @@
 namespace App\Repositories;
 
 use App\Models\OrderItem;
+use App\Repositories\Facades\TransactionFacade;
 use App\Repositories\Interfaces\OrderItemInterface;
+use Illuminate\Support\Facades\DB;
 
 class OrderItemRepo implements OrderItemInterface
 {
@@ -55,5 +57,13 @@ class OrderItemRepo implements OrderItemInterface
     }
     public function delete(OrderItem $orderItem) {
         return $orderItem->update(['status' => 'cancelled']);
+    }
+
+    public function cancel(OrderItem $orderItem) {
+        DB::beginTransaction();
+        $orderItem->update(['status' => 'cancelled']);
+        TransactionFacade::createCredit($orderItem->user, $orderItem->price_cents, "Refund for cancelled phone number #{$orderItem->phone_number} in order #{$orderItem->order_id}");
+        DB::commit();
+        return $orderItem;
     }
 }
