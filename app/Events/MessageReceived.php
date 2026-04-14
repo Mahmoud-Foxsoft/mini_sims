@@ -31,7 +31,12 @@ class MessageReceived
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('channel-name'),
+            new PrivateChannel('user.' . $this->message->user_id),
         ];
+    }
+
+    public function broadcastAs(): string
+    {
+        return 'message-received';
     }
 }

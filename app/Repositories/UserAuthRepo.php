@@ -3,6 +3,7 @@
 namespace App\Repositories;
 
 use App\Models\User;
+use App\Repositories\Facades\OrderItemFacade;
 use App\Repositories\Interfaces\UserAuthInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -45,6 +46,7 @@ class UserAuthRepo implements UserAuthInterface
         }
         $token = $user->createToken('authToken', ['user-api'])->accessToken;
         $user->token = $token;
+        $user->count_pending_numbers = OrderItemFacade::countPendingNumbers($user->id);
         return $user;
     }
 
@@ -115,7 +117,12 @@ class UserAuthRepo implements UserAuthInterface
 
     public function getUserProfile(Request $request): ?User
     {
-        return $request->user() ?? null;
+        $user = $request->user();
+        if (!$user) {
+            return null;
+        }
+        $user->count_pending_numbers = OrderItemFacade::countPendingNumbers($user->id);
+        return $user;
     }
 
     public function regenerateOtp(string $email): ?User

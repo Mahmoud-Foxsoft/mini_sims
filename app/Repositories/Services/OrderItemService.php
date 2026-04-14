@@ -35,4 +35,8 @@ class OrderItemService
     public function cancel(OrderItem $orderItem) {
         return $this->repo->cancel($orderItem);
     }
+
+    public function countPendingNumbers(int $user_id) {
+        return $this->repo->countPendingNumbers($user_id);
+    }
 }

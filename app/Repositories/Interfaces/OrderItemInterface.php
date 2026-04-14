@@ -12,4 +12,5 @@ interface OrderItemInterface
     public function update(OrderItem $orderItem, array $data);
     public function delete(OrderItem $orderItem);
     public function cancel(OrderItem $orderItem);
+    public function countPendingNumbers(int $user_id);
 }

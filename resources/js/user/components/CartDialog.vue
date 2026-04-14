@@ -8,12 +8,28 @@ const cartStore = useCartStore();
 const toast = useToast();
 const isCheckingOut = ref(false);
 
+// UPDATED: Handle quantity changes based on the GLOBAL cart limit
+const handleQuantityChange = (item, newQuantity) => {
+    // If they are trying to add more, check if the whole cart is full
+    if (newQuantity > item.quantity && cartStore.totalItems >= cartStore.maxCartAmount) {
+        toast.add({
+            severity: 'warn',
+            summary: 'Cart Full',
+            detail: `You cannot add more. Your limit is ${cartStore.maxCartAmount} total items.`,
+            life: 3000
+        });
+        return;
+    }
+    
+    // Otherwise, let the store handle it safely
+    cartStore.updateQuantity(item.code, newQuantity);
+};
+
 const handleCheckout = async () => {
     if (cartStore.items.length === 0) return;
     
     isCheckingOut.value = true;
     try {
-        // Send ONLY IDs and Quantities to the backend for verification
         const payload = {
             cart: cartStore.items.map(item => ({
                 service_code: item.code,
@@ -21,7 +37,6 @@ const handleCheckout = async () => {
             }))
         };
 
-        // Adjust route to match your actual checkout endpoint
         await apiRequest('/v1/orders', {
             method: 'POST',
             body: payload
@@ -62,6 +77,17 @@ const handleCheckout = async () => {
         </div>
 
         <div v-else class="flex flex-col gap-4 mt-2">
+            
+            <div class="flex justify-between items-center text-sm px-1 mb-1">
+                <span class="text-gray-500 font-medium">Cart Capacity:</span>
+                <span 
+                    class="font-bold"
+                    :class="cartStore.totalItems >= cartStore.maxCartAmount ? 'text-orange-500' : 'text-primary'"
+                >
+                    {{ cartStore.totalItems }} / {{ cartStore.maxCartAmount }} Items
+                </span>
+            </div>
+
             <div class="flex flex-col gap-3 max-h-[60vh] overflow-y-auto px-1">
                 <div 
                     v-for="item in cartStore.populatedCart" 
@@ -75,9 +101,24 @@ const handleCheckout = async () => {
 
                     <div class="flex items-center gap-3">
                         <div class="flex items-center gap-2 bg-gray-100 dark:bg-gray-800 rounded-md p-1">
-                            <Button icon="pi pi-minus" text size="small" class="w-6 h-6 p-0" @click="cartStore.updateQuantity(item.code, item.quantity - 1)" />
+                            <Button 
+                                icon="pi pi-minus" 
+                                text 
+                                size="small" 
+                                class="w-6 h-6 p-0" 
+                                @click="handleQuantityChange(item, item.quantity - 1)" 
+                            />
+                            
                             <span class="w-4 text-center text-sm font-semibold">{{ item.quantity }}</span>
-                            <Button icon="pi pi-plus" text size="small" class="w-6 h-6 p-0" @click="cartStore.updateQuantity(item.code, item.quantity + 1)" />
+                            
+                            <Button 
+                                icon="pi pi-plus" 
+                                text 
+                                size="small" 
+                                class="w-6 h-6 p-0" 
+                                @click="handleQuantityChange(item, item.quantity + 1)" 
+                                :disabled="cartStore.totalItems >= cartStore.maxCartAmount"
+                            />
                         </div>
                         
                         <div class="flex flex-col items-end min-w-[3rem]">
@@ -97,13 +138,13 @@ const handleCheckout = async () => {
 
             <div class="border-t border-gray-200 dark:border-gray-700 pt-4 mt-2">
                 <div class="flex justify-between items-center mb-4 text-lg font-bold">
-                    <span>Total:</span>
+                    <span>Total Cost:</span>
                     <span class="text-primary-600">${{ Number(cartStore.cartTotal).toFixed(2) }}</span>
                 </div>
                 
                 <div class="flex gap-2">
-                    <Button label="Clear Cart" severity="secondary" outlined class="w-full" @click="cartStore.clearCart" />
-                    <Button label="Checkout" icon="pi pi-check" class="w-full" :loading="isCheckingOut" @click="handleCheckout" />
+                    <Button label="Clear Cart" severity="secondary" outlined class="w-1/3" @click="cartStore.clearCart" />
+                    <Button label="Checkout" icon="pi pi-check" class="w-2/3" :loading="isCheckingOut" @click="handleCheckout" />
                 </div>
             </div>
         </div>

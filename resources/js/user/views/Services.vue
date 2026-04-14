@@ -1,11 +1,11 @@
 <script setup>
-import { onMounted, ref } from "vue";
+import { onMounted, ref, computed } from "vue";
 import { useToast } from "primevue/usetoast";
 import { apiRequest } from "@/services/api";
-import { useCartStore } from "@/stores/cart"; // <-- Import the cart store
+import { useCartStore } from "@/stores/cart";
 
 const toast = useToast();
-const cartStore = useCartStore(); // <-- Initialize the store
+const cartStore = useCartStore();
 const loading = ref(false);
 const services = ref([]);
 
@@ -20,6 +20,12 @@ const availableOptions = [
     { label: "Available", value: true },
     { label: "Unavailable", value: false },
 ];
+
+// NEW: Calculate exactly how much room is left in the cart globally
+const availableSpace = computed(() => {
+    const space = cartStore.maxCartAmount - cartStore.totalItems;
+    return space > 0 ? space : 0;
+});
 
 const buildQuery = () => {
     const params = new URLSearchParams();
@@ -85,14 +91,27 @@ const getAvailabilitySeverity = (isAvailable) => {
     return isAvailable ? "success" : "secondary";
 };
 
-// Handle adding to cart and resetting the row's quantity counter
+// UPDATED: Handle adding to cart safely with the new global limits
 const handleAddToCart = (service) => {
-    cartStore.addToCart(service, service._cartQty);
+    if (availableSpace.value <= 0) {
+        toast.add({
+            severity: "warn",
+            summary: "Cart Full",
+            detail: `You cannot add more. Your limit is ${cartStore.maxCartAmount} total items.`,
+            life: 3000,
+        });
+        return;
+    }
+
+    // Ensure they don't request more than the cart can physically hold right now
+    const qtyToAdd = Math.min(service._cartQty, availableSpace.value);
+
+    cartStore.addToCart(service, qtyToAdd);
     
     toast.add({
         severity: "success",
         summary: "Added to Cart",
-        detail: `${service._cartQty}x ${service.name} added to your cart.`,
+        detail: `${qtyToAdd}x ${service.name} added to your cart.`,
         life: 3000,
     });
 
@@ -109,6 +128,12 @@ onMounted(() => fetchServices());
             <div>
                 <h2 class="text-xl font-semibold">Services</h2>
                 <p class="text-gray-600">Browse and manage available phone services.</p>
+            </div>
+            <div class="text-sm font-medium px-3 py-1 bg-gray-100 dark:bg-gray-800 rounded-md">
+                Cart Capacity: 
+                <span :class="availableSpace === 0 ? 'text-orange-500 font-bold' : 'text-primary'">
+                    {{ cartStore.totalItems }} / {{ cartStore.maxCartAmount }}
+                </span>
             </div>
         </div>
 
@@ -218,11 +243,13 @@ onMounted(() => fetchServices());
                                         @click="data._cartQty > 1 ? data._cartQty-- : null" 
                                     />
                                     <span class="font-semibold text-sm">{{ data._cartQty }}</span>
+                                    
                                     <Button 
                                         icon="pi pi-plus" 
                                         text 
                                         size="small" 
                                         class="w-8 h-8 p-0" 
+                                        :disabled="data._cartQty >= availableSpace || availableSpace === 0"
                                         @click="data._cartQty++" 
                                     />
                                 </div>
@@ -232,6 +259,7 @@ onMounted(() => fetchServices());
                                     icon="pi pi-shopping-cart" 
                                     size="small"
                                     class="w-full"
+                                    :disabled="availableSpace === 0"
                                     @click="handleAddToCart(data)"
                                 />
                             </div>

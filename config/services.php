@@ -48,5 +48,6 @@ return [
         'phone_services_url' => env('CENTRAL_SERVER_PHONE_SERVICES_URL'),
         'phone_numbers_url' => env('CENTRAL_SERVER_PHONE_NUMBERS_URL'),
         'cancel_url' => env('CENTRAL_SERVER_CANCEL_URL'),
+        'reuse_url' => env('CENTRAL_SERVER_REUSE_URL'),
     ],
 ];

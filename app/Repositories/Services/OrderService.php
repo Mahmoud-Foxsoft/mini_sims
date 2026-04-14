@@ -7,6 +7,7 @@ use App\Http\Services\PhoneServiceService;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\UserPlan;
+use App\Repositories\Facades\OrderItemFacade;
 use App\Repositories\Facades\UserFacade;
 use App\Repositories\Interfaces\OrderInterface;
 use Carbon\Carbon;
@@ -34,6 +35,19 @@ class OrderService
     }
     public function processOrder(User $user, array $cartItems): array
     {
+        // --- STEP 0: Validate Cart Capacity Limit ---
+        $requestedTotalItems = collect($cartItems)->sum('quantity');
+
+        $baseMaxAmount = (int) config('app.max_pending_numbers');
+
+        $amountUsedByUser = OrderItemFacade::countPendingNumbers($user->id);
+
+        $availableSpace = max(0, $baseMaxAmount - $amountUsedByUser);
+
+        if ($requestedTotalItems > $availableSpace) {
+            throw new Exception("Cart limit exceeded. You only have capacity for {$availableSpace} more items.", 422);
+        }
+
         // --- STEP 1: Validate Services and Calculate Max Cost ---
         $maxPotentialCost = 0;
         $cartWithPrices = [];

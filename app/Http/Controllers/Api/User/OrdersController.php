@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\OrderStoreRequest;
 use App\Repositories\Facades\OrderFacade;
 use Exception;
+use Illuminate\Support\Facades\Cache;
 
 class OrdersController extends Controller
 {
@@ -26,6 +27,7 @@ class OrdersController extends Controller
                 $request->validated('cart')
             );
             defer(function () use ($result) {
+                Cache::forget('pending_numbers_' . $result['order']->user_id);
                 event(new \App\Events\OrderPlaced($result['order']));
             });
             return $this->sendResponse($result, 'Order created successfully.');

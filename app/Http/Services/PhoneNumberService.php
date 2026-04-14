@@ -38,12 +38,30 @@ class PhoneNumberService
                     'user_id' => $user_id,
                 ])
                 ->json();
-            return $response['success'] ?? false;
+            return $response['status'] === 'canceled' ?? false;
         } catch (\Throwable $th) {
             Log::error('Error cancelling phone number on Central Server', [
                 'exception' => $th->getMessage(),
             ]);
             return false;
+        }
+    }
+
+    public static function reusePhoneNumber(string $request_id)
+    {
+        try {
+            $response = Http::centralServer()
+                ->retry(3, 200)
+                ->post(config('services.centralServer.reuse_url'), [
+                    'request_id' => $request_id,
+                ])->throw()
+                ->json();
+            return $response;
+        } catch (\Throwable $th) {
+            Log::error('Error reusing phone number on Central Server', [
+                'exception' => $th->getMessage(),
+            ]);
+            throw $th;
         }
     }
 }

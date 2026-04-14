@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static mixed update(OrderItem $orderItem, array $data)
  * @method static mixed delete(OrderItem $orderItem)
  * @method static mixed cancel(OrderItem $orderItem)
+ * @method static mixed countPendingNumbers(int $user_id)
  * 
  * @see \App\Repositories\Services\OrderItemService
  */

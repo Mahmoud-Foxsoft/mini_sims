@@ -11,9 +11,9 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderPlaced
+class OrderPlaced implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels, ShouldBroadcast;
+    use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
@@ -31,7 +31,12 @@ class OrderPlaced
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel($this->order->user_id),
+            new PrivateChannel('user.' . $this->order->user_id),
         ];
+    }
+
+    public function broadcastAs()
+    {
+        return 'order-placed';
     }
 }

@@ -43,6 +43,7 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('orders', OrdersController::class)->only(['index', 'store']);
         Route::apiResource('phone-numbers', OrderItemsController::class)->only(['index']);
         Route::post('phone-numbers/{orderItem}/cancel', [OrderItemsController::class, 'cancel']);
+        Route::post('phone-numbers/{orderItem}/reuse', [OrderItemsController::class, 'reuse']);
         // Transactions
         Route::get('transactions', [TransactionController::class, 'index']);
         Route::get('payments', [PaymentController::class, 'index']);

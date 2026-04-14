@@ -12,27 +12,25 @@ const totalRecords = ref(0);
 const first = ref(0);
 const rows = ref(20);
 
-// --- Added for Bulk Selection ---
+// --- Bulk Selection ---
 const selectedNumbers = ref([]);
 const isDeletingBulk = ref(false);
 
-// --- Custom "Select All" Logic ---
 const selectablePhoneNumbers = computed(() => {
     return phoneNumbers.value.filter(num => num.status !== 'pending');
 });
 
 const isAllSelected = computed(() => {
     if (!selectablePhoneNumbers.value.length) return false;
-    // Check if every selectable number's ID is currently in the selectedNumbers array
     const selectedIds = selectedNumbers.value.map(n => n.id);
     return selectablePhoneNumbers.value.every(n => selectedIds.includes(n.id));
 });
 
 const toggleAll = () => {
     if (isAllSelected.value) {
-        selectedNumbers.value = []; // Deselect all
+        selectedNumbers.value = [];
     } else {
-        selectedNumbers.value = [...selectablePhoneNumbers.value]; // Select only the completed ones
+        selectedNumbers.value = [...selectablePhoneNumbers.value];
     }
 };
 
@@ -42,7 +40,7 @@ const phoneFilter = ref("");
 const statusFilter = ref(null);
 const statusOptions = [
     { label: "All", value: null },
-    { label: "Active", value: "active" },
+    { label: "Exhausted", value: "exhausted" },
     { label: "Completed", value: "completed" },
     { label: "Timeout refunded", value: "timeout_refunded" },
     { label: "Cancelled", value: "cancelled" },
@@ -51,7 +49,10 @@ const statusOptions = [
 
 const now = ref(Date.now());
 let timeInterval = null;
+
+// --- Action Loading States ---
 const cancelLoading = ref({});
+const reuseLoading = ref({}); // NEW: Loading state for reuse action
 
 const buildQuery = (page) => {
     const params = new URLSearchParams();
@@ -98,7 +99,7 @@ const onPage = (event) => {
 const applyFilters = () => {
     first.value = 0;
     expandedRows.value = {};
-    selectedNumbers.value = []; // Clear selection when filtering
+    selectedNumbers.value = []; 
     fetchNumbers(1);
 };
 
@@ -122,8 +123,8 @@ const toggleRow = (row) => {
 
 const statusSeverity = (status) => {
     switch (status) {
-        case "active": return "success";
-        case "completed": return "info";
+        case "completed": return "success";
+        case "exhausted": return "info";
         case "timeout_refunded": return "warning";
         case "cancelled": return "danger";
         default: return "secondary";
@@ -135,6 +136,16 @@ const canCancel = (createdAt) => {
     const createdMs = new Date(createdAt).getTime();
     const diffMinutes = (now.value - createdMs) / (1000 * 60);
     return diffMinutes >= 2;
+};
+
+// --- NEW: Copy Phone Number logic ---
+const copyToClipboard = async (text) => {
+    try {
+        await navigator.clipboard.writeText(text);
+        toast.add({ severity: 'success', summary: 'Copied', detail: 'Phone number copied to clipboard', life: 2000 });
+    } catch (err) {
+        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to copy text', life: 2000 });
+    }
 };
 
 const handleCancel = (event, id) => {       
@@ -153,7 +164,6 @@ const handleCancel = (event, id) => {
                 await apiRequest(`/v1/phone-numbers/${id}/cancel`, { method: 'POST' });
                 toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Phone number cancelled.', life: 3000 });
                 
-                // Refresh data
                 const currentPage = Math.floor(first.value / rows.value) + 1;
                 fetchNumbers(currentPage);
             } catch (error) {
@@ -163,6 +173,34 @@ const handleCancel = (event, id) => {
             }
         }
     });
+};
+
+// --- NEW: Handle Reuse logic ---
+const handleReuse = async (id) => {
+    reuseLoading.value[id] = true;
+    try {
+        await apiRequest(`/v1/phone-numbers/${id}/reuse`, { method: 'POST' });
+        
+        toast.add({ 
+            severity: 'success', 
+            summary: 'Reused', 
+            detail: 'Phone number requested for reuse.', 
+            life: 3000 
+        });
+        
+        // Refresh the table to show the new/updated record
+        const currentPage = Math.floor(first.value / rows.value) + 1;
+        fetchNumbers(currentPage);
+    } catch (error) {
+        toast.add({ 
+            severity: 'error', 
+            summary: 'Reuse Failed', 
+            detail: error.message, 
+            life: 4000 
+        });
+    } finally {
+        reuseLoading.value[id] = false;
+    }
 };
 
 const handleBulkDelete = () => {
@@ -270,6 +308,7 @@ onUnmounted(() => {
                     </Column>
 
                     <Column expander style="width: 3rem" />
+                    
                     <Column style="width: 4rem">
                         <template #body="slotProps">
                             <div :id="'msgCount_' + slotProps.data.id"
@@ -282,24 +321,40 @@ onUnmounted(() => {
                             </div>
                         </template>
                     </Column>
+                    
                     <Column field="service_name" header="Service" style="min-width: 12rem" />
-                    <Column field="phone_number" header="Phone number" style="min-width: 12rem">
+                    
+                    <Column field="phone_number" header="Phone number" style="min-width: 14rem">
                         <template #body="slotProps">
-                            <Button link class="p-0" @click.stop="toggleRow(slotProps.data)">
-                                <span class="text-primary-600 underline">{{ slotProps.data.phone_number }}</span>
-                            </Button>
+                            <div class="flex items-center gap-2">
+                                <Button link class="p-0" @click.stop="toggleRow(slotProps.data)">
+                                    <span class="text-primary-600 underline">{{ slotProps.data.phone_number }}</span>
+                                </Button>
+                                <Button 
+                                    icon="pi pi-copy" 
+                                    text 
+                                    rounded 
+                                    size="small" 
+                                    class="w-6 h-6 p-0 text-gray-500 hover:text-gray-700" 
+                                    @click.stop="copyToClipboard(slotProps.data.phone_number)" 
+                                    v-tooltip.top="'Copy Number'"
+                                />
+                            </div>
                         </template>
                     </Column>
+                    
                     <Column field="price_cents" header="Price" style="min-width: 8rem">
                         <template #body="slotProps">
                             $ {{ (slotProps.data.price_cents / 100).toFixed(2) }}
                         </template>
                     </Column>
+                    
                     <Column field="status" header="Status" style="min-width: 10rem">
                         <template #body="slotProps">
                             <Tag :value="slotProps.data.status" :severity="statusSeverity(slotProps.data.status)" />
                         </template>
                     </Column>
+                    
                     <Column header="Created" style="min-width: 12rem">
                         <template #body="slotProps">
                             {{
@@ -311,14 +366,19 @@ onUnmounted(() => {
                         </template>
                     </Column>
 
-                    <Column header="Actions" style="min-width: 8rem" alignFrozen="right">
+                    <Column header="Actions" style="min-width: 12rem" alignFrozen="right">
                         <template #body="slotProps">
-                            <div class="flex items-center">
+                            <div class="flex items-center gap-2">
                                 <Button v-if="slotProps.data.status === 'pending'" label="Cancel" severity="danger"
                                     size="small" icon="pi pi-times" :disabled="!canCancel(slotProps.data.created_at)"
                                     :loading="cancelLoading[slotProps.data.id]"
                                     :title="!canCancel(slotProps.data.created_at) ? 'Available 2 minutes after purchase' : ''"
-                                    @click="handleCancel($event,slotProps.data.id)" />
+                                    @click="handleCancel($event, slotProps.data.id)" />
+                                    
+                                <Button v-if="slotProps.data.status === 'completed'" label="Reuse" severity="success" outlined
+                                    size="small" icon="pi pi-refresh"
+                                    :loading="reuseLoading[slotProps.data.id]"
+                                    @click="handleReuse(slotProps.data.id)" />
                             </div>
                         </template>
                     </Column>
@@ -346,6 +406,7 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </template>
+                    
                     <template #empty>
                         <div v-if="!loading" class="flex flex-col items-center justify-center p-8 text-gray-500">
                             <i class="pi pi-inbox text-4xl mb-4 text-gray-400"></i>
