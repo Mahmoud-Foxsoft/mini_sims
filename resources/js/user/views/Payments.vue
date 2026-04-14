@@ -62,7 +62,6 @@ const fetchPayments = async (page = 1) => {
     }
 };
 
-
 const onPage = (event) => {
     first.value = event.first;
     rows.value = event.rows;
@@ -104,7 +103,7 @@ watch(
     () => {
         first.value = 0;
         fetchPayments(1);
-    }
+    },
 );
 </script>
 
@@ -178,7 +177,11 @@ watch(
                         field="amount"
                         header="Amount"
                         style="min-width: 8rem"
-                    />
+                    >
+                        <template #body="slotProps">
+                            $ {{ slotProps.data.amount.toFixed(2) }}
+                        </template>
+                    </Column>
                     <Column
                         field="currency"
                         header="Currency"
@@ -241,6 +244,5 @@ watch(
                 </DataTable>
             </template>
         </Card>
-
     </div>
 </template>

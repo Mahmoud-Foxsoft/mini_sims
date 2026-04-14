@@ -12,6 +12,9 @@ class PhoneServiceService
 
     public static function getPhoneServices(array $filters = []): array
     {
+        if (empty(Cache::get(self::CACHE_KEY . 'services', []))) {
+            Cache::forget(self::CACHE_KEY . 'services');
+        }
         $allServices = Cache::remember(self::CACHE_KEY . 'services', 3600, function () {
             try {
                 $response = Http::centralServer()
@@ -39,7 +42,6 @@ class PhoneServiceService
                 return [];
             }
         });
-
         if (empty($filters)) {
             return $allServices;
         }

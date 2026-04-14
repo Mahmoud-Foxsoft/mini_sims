@@ -41,6 +41,7 @@ class PaymentObserver
             Mail::to(env('ADMIN_EMAIL'))->send(new AdminPaymentNotification($payment->amount));
             $user = $payment->user;
             Mail::to($user)->send(new UserPaymentNotification($payment->amount,$user));
+            event(new \App\Events\PaymentFinished($payment));
         }
     }
 

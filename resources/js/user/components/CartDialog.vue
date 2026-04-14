@@ -33,7 +33,6 @@ const handleCheckout = async () => {
             detail: 'Your services have been ordered successfully.',
             life: 4000
         });
-
         cartStore.clearCart();
         cartStore.isCartVisible = false; // Close dialog
         
@@ -89,7 +88,7 @@ const handleCheckout = async () => {
                                 severity="danger" 
                                 size="small" 
                                 class="h-6 p-0" 
-                                @click="cartStore.removeFromCart(item.id)" 
+                                @click="cartStore.removeFromCart(item.code)" 
                             />
                         </div>
                     </div>

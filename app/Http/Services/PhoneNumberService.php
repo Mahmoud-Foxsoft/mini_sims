@@ -14,12 +14,12 @@ class PhoneNumberService
             $response = Http::centralServer()
                 ->retry(3, 200)
                 ->post(config('services.centralServer.phone_numbers_url'), [
-                    'service_code' => $service_code,
-                    'count' => $count,
+                    'service' => $service_code,
+                    'qty' => $count,
                     'user_id' => $user_id,
                 ])
                 ->json();
-            return $response['data'];
+            return $response;
         } catch (\Throwable $th) {
             Log::error('Error fetching phone numbers from Central Server', [
                 'exception' => $th->getMessage(),

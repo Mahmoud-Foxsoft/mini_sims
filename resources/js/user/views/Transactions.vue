@@ -164,9 +164,13 @@ onMounted(() => fetchTransactions());
                     </Column>
                     <Column
                         field="amount_cents"
-                        header="Amount (cents)"
+                        header="Amount"
                         style="min-width: 10rem"
-                    />
+                    >
+                        <template #body="slotProps">
+                            $ {{ (slotProps.data.amount_cents / 100).toFixed(2) }}
+                        </template>
+                </Column>
                     <Column
                         field="description"
                         header="Description"

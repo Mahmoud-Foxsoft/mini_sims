@@ -3,9 +3,14 @@
 namespace App\Repositories;
 
 use App\Models\Order;
+use App\Models\User;
+use App\Repositories\Facades\OrderItemFacade;
+use App\Repositories\Facades\TransactionFacade;
 use App\Repositories\Interfaces\OrderInterface;
 use Carbon\Carbon;
+use Exception;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -87,5 +92,46 @@ class OrderRepo implements OrderInterface
 
             return (int) $totalAmount[0]->total_amount;
         });
+    }
+
+    public function createOrderWithTransaction(User $user, array $fulfilledNumbers, int $totalCents, Collection $servicesByCode)
+    {
+        DB::beginTransaction();
+        try {
+            // Create main order
+            $order = $this->createNewOrder([
+                'user_id' => $user->id,
+                'total_cent_price' => $totalCents,
+                'status' => 'completed',
+            ]);
+
+            // Create Order Items
+            foreach ($fulfilledNumbers as $item) {
+                OrderItemFacade::create([
+                    'user_id' => $user->id,
+                    'order_id' => $order->id,
+                    'external_order_id' => $item['phone_data']['request_id'],
+                    'service_name' => $servicesByCode->get($item['service_code'])['name'],
+                    'phone_number' => $item['phone_data']['number'],
+                    'price_cents' => $item['price_cents'] * 100,
+                ]);
+            }
+
+            // Perform the exact debit using your TransactionFacade
+            TransactionFacade::createDebit(
+                $user,
+                $totalCents * 100,
+                "Payment for Order #{$order->id}",
+                (string) $order->id
+            );
+
+            DB::commit();
+
+            return $order;
+            
+        } catch (Exception $e) {
+            DB::rollBack();
+            throw $e; // Rethrow to let the service handle the external API cancellations
+        }
     }
 }

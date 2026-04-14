@@ -35,7 +35,7 @@ const toggleUserMenu = (event) => {
 
 const balanceUsd = computed(() => {
     const cents = authStore.user?.balance_cents ?? 0;
-    return (cents / 1000).toFixed(2);
+    return (cents / 100).toFixed(2);
 });
 
 const openPaymentDialog = () => {
