@@ -21,6 +21,7 @@ return new class extends Migration
                 $table->timestamp('email_verified_at')->nullable();
                 $table->unsignedBigInteger('balance_cents')->default(0);
                 $table->string('webhook_url')->nullable();
+                $table->integer('max_pending_numbers')->nullable();
                 $table->boolean('is_blocked')->default(false);
                 $table->string('password');
                 $table->rememberToken();

@@ -113,21 +113,24 @@ class OrderRepo implements OrderInterface
                     'external_order_id' => $item['phone_data']['request_id'],
                     'service_name' => $servicesByCode->get($item['service_code'])['name'],
                     'phone_number' => $item['phone_data']['number'],
-                    'price_cents' => $item['price_cents'] * 100,
+                    'price_cents' => $item['price'],
                 ]);
             }
 
             // Perform the exact debit using your TransactionFacade
             TransactionFacade::createDebit(
                 $user,
-                $totalCents * 100,
+                $totalCents,
                 "Payment for Order #{$order->id}",
                 (string) $order->id
             );
 
             DB::commit();
 
-            return $order;
+            return [
+                'order' => $order,
+                'numbers' => OrderItemFacade::all(['order_id' => $order->id])->items(),
+            ];
             
         } catch (Exception $e) {
             DB::rollBack();

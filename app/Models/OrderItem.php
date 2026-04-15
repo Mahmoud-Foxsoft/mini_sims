@@ -4,7 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 
 #[Guarded([])]
@@ -12,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 class OrderItem extends Model
 {
     /** @use HasFactory<\Database\Factories\OrderItemFactory> */
-    use HasFactory;
+    use HasFactory, MassPrunable;
 
     public function order()
     {
@@ -27,5 +29,10 @@ class OrderItem extends Model
     public function messages()
     {
         return $this->hasMany(PhoneMessage::class)->latest();
+    }
+
+    public function prunable(): Builder
+    {
+        return static::where('created_at', '<=', now()->subDays(30));
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Events;
 
-use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
@@ -11,14 +10,14 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderPlaced implements ShouldBroadcast
+class PhoneNumbersRefunded implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(public Order $order)
+    public function __construct(public object $refund)
     {
         //
     }
@@ -31,12 +30,12 @@ class OrderPlaced implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('user.' . $this->order->user_id),
+            new PrivateChannel('user.' . $this->refund->user_id),
         ];
     }
 
-    public function broadcastAs()
+    public function broadcastAs(): string
     {
-        return 'order-placed';
+        return 'phone-numbers-refunded';
     }
 }

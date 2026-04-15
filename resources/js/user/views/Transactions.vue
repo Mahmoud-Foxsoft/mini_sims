@@ -91,7 +91,7 @@ onMounted(() => fetchTransactions());
                 <template #content>
                     <p class="text-gray-500 text-sm">Total credits</p>
                     <h3 class="text-xl font-semibold mt-2">
-                        {{ creditSum }} cents
+                        {{ creditSum / 100 }} $
                     </h3>
                 </template>
             </Card>
@@ -99,7 +99,7 @@ onMounted(() => fetchTransactions());
                 <template #content>
                     <p class="text-gray-500 text-sm">Total debits</p>
                     <h3 class="text-xl font-semibold mt-2">
-                        {{ debitSum }} cents
+                        {{ debitSum / 100 }} $
                     </h3>
                 </template>
             </Card>

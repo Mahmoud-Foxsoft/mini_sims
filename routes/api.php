@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\ContactController;
 use App\Http\Controllers\Api\MessagesWebhookController;
 use App\Http\Controllers\Api\NowPaymentsWebhookController;
+use App\Http\Controllers\Api\ServicesWebhookController;
 use App\Http\Controllers\Api\User\HomeController;
 use Illuminate\Support\Facades\Route;
 
@@ -43,5 +44,6 @@ Route::prefix('admin')->group(function () {
 
 Route::post('/contact', [ContactController::class, 'store'])->name('contact.send');
 
-Route::post('nowpayments/webhook', [NowPaymentsWebhookController::class, 'handle'])->name('nowpayments.webhook');
-Route::post('messages/webhook', [MessagesWebhookController::class, 'handle'])->name('messages.webhook');
+Route::post('payments/webhook', [NowPaymentsWebhookController::class, 'handle'])->name('nowpayments.webhook');
+Route::post('sms/webhook', [MessagesWebhookController::class, 'handle'])->name('messages.webhook');
+Route::post('services/webhook', [ServicesWebhookController::class, 'handle'])->name('messages.webhook');

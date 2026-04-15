@@ -55,6 +55,7 @@ return [
     'url' => env('APP_URL', 'http://localhost'),
     'server_ip' => env('APP_SERVER_IP', '127.0.0.1'),
     'max_pending_numbers' => env('MAX_PENDING_NUMBERS', 5),
+    'phone_number_timeout' => env('PHONE_NUMBER_TIMEOUT', 15),
 
     /*
     |--------------------------------------------------------------------------

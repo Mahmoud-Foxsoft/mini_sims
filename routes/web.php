@@ -20,3 +20,8 @@ Route::view('/dashboard/{any?}', 'user.dashboard')
     ->where('any', '.*')
     ->name('user.dashboard');
 
+    // Route::get('/test', function () {
+    //     event(new \App\Events\ServicesUpdated());
+    //     return response()->json(['success' => true]);
+    // });
+

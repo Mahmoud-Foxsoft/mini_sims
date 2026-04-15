@@ -35,6 +35,9 @@ class OrderItemRepo implements OrderItemInterface
             ->when(
                 $filters['status'] ?? null,
                 fn($query, $status) => $query->where('status', $status)
+            )->when(
+                $filters['order_id'] ?? null,
+                fn($query, $order_id) => $query->where('order_id', $order_id)
             )
             ->latest()->paginate(20);
     }

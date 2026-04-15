@@ -2,22 +2,22 @@
 
 namespace App\Events;
 
-use App\Models\Payment;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class PaymentFinished implements ShouldBroadcast
+class ServicesUpdated implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
     /**
      * Create a new event instance.
      */
-    public function __construct(public Payment $payment)
+    public function __construct()
     {
         //
     }
@@ -30,11 +30,12 @@ class PaymentFinished implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('user.' . $this->payment->user_id),
+            new PrivateChannel('global'),
         ];
     }
 
-    public function broadcastAs() {
-        return 'payment-finished';
+    public function broadcastAs(): string
+    {
+        return 'services-updated';
     }
 }

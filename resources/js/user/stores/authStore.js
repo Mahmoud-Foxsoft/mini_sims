@@ -1,7 +1,6 @@
 import { defineStore } from "pinia";
 import { ref, computed } from "vue";
 import { apiRequest } from "@/services/api";
-import { useCartStore } from "@/stores/cart";
 
 const TOKEN_KEY = "user_token";
 const USER_KEY = "user_profile";
@@ -9,9 +8,13 @@ const USER_KEY = "user_profile";
 export const useAuthStore = defineStore("authStore", () => {
     const token = ref(localStorage.getItem(TOKEN_KEY) || "");
     const user = ref(JSON.parse(localStorage.getItem(USER_KEY) || "null"));
-
+    const baseMaxAmount = user.value?.max_pending_numbers || Number(import.meta.env.VITE_MAX_CART_AMOUNT) || 5;
+    const maxCartAmount = ref(baseMaxAmount);
     const isAuthenticated = computed(() => Boolean(token.value));
-
+    const setMaxCartAmount = (amountUsedByUser) => {
+        const calculatedMax = baseMaxAmount - amountUsedByUser;
+        maxCartAmount.value = calculatedMax < 0 ? 0 : calculatedMax;        
+    };
     const setSession = (newToken, newUser) => {
         token.value = newToken || "";
         user.value = newUser || null;
@@ -27,8 +30,7 @@ export const useAuthStore = defineStore("authStore", () => {
         if (!token.value) return;
         try {
             const profile = await apiRequest("/v1/me");
-            const cart = useCartStore();
-            cart.setMaxCartAmount(profile.count_pending_numbers);
+            setMaxCartAmount(profile.count_pending_numbers);
             setSession(token.value, profile);
         } catch (error) {
             setSession("", null);
@@ -41,8 +43,7 @@ export const useAuthStore = defineStore("authStore", () => {
             body: payload,
         });
         setSession(data.token, data);
-        const cart = useCartStore();
-        cart.setMaxCartAmount(data.count_pending_numbers);
+        setMaxCartAmount(data.count_pending_numbers);
         return data;
     };
 
@@ -119,5 +120,6 @@ export const useAuthStore = defineStore("authStore", () => {
         getProfile,
         updateProfile,
         rotateApiKey,
+        maxCartAmount
     };
 });

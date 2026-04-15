@@ -24,15 +24,11 @@ class OrdersController extends Controller
         try {
             $result = OrderFacade::processOrder(
                 $request->user(),
-                $request->validated('cart')
+                $request->validated('service_code'),
+                $request->validated('quantity')
             );
-            defer(function () use ($result) {
-                Cache::forget('pending_numbers_' . $result['order']->user_id);
-                event(new \App\Events\OrderPlaced($result['order']));
-            });
             return $this->sendResponse($result, 'Order created successfully.');
         } catch (Exception $e) {
-            // Determine the HTTP status code based on the exception code
             $statusCode = $e->getCode() >= 400 && $e->getCode() < 600 ? $e->getCode() : 500;
 
             return $this->sendError($e->getMessage(), [], $statusCode);

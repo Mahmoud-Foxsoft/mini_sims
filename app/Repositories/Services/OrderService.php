@@ -33,42 +33,29 @@ class OrderService
     {
         return $this->repo->sumOrdersMonthly($from, $to, $user_id);
     }
-    public function processOrder(User $user, array $cartItems): array
+    public function processOrder(User $user, string $serviceCode, int $quantity): array
     {
-        // --- STEP 0: Validate Cart Capacity Limit ---
-        $requestedTotalItems = collect($cartItems)->sum('quantity');
 
-        $baseMaxAmount = (int) config('app.max_pending_numbers');
+        $baseMaxAmount = $user->max_pending_numbers ?? (int) config('app.max_pending_numbers');
 
         $amountUsedByUser = OrderItemFacade::countPendingNumbers($user->id);
 
         $availableSpace = max(0, $baseMaxAmount - $amountUsedByUser);
 
-        if ($requestedTotalItems > $availableSpace) {
-            throw new Exception("Cart limit exceeded. You only have capacity for {$availableSpace} more items.", 422);
+        if ($quantity > $availableSpace) {
+            throw new Exception("Limit exceeded. You only have capacity for {$availableSpace} more numbers.", 422);
         }
 
-        // --- STEP 1: Validate Services and Calculate Max Cost ---
-        $maxPotentialCost = 0;
-        $cartWithPrices = [];
         $services = PhoneServiceService::getPhoneServices();
         $servicesByCode = collect($services)->keyBy('code');
 
-        foreach ($cartItems as $item) {
-            $service = $servicesByCode->get($item['service_code']);
+        $service = $servicesByCode->get($serviceCode);
 
-            if (!$service) {
-                throw new Exception("Service with code {$item['service_code']} not found", 404);
-            }
-
-            $maxPotentialCost += $service['price'] * $item['quantity'];
-
-            $cartWithPrices[] = [
-                'service_code' => $item['service_code'],
-                'quantity' => $item['quantity'],
-                'unit_price' => $service['price']
-            ];
+        if (!$service) {
+            throw new Exception("Service with code {$serviceCode} not found", 404);
         }
+
+        $maxPotentialCost = $service['price'] * $quantity;
 
         // --- STEP 2: Check User Balance ---
         if (!UserFacade::checkBalance($user, $maxPotentialCost)) {
@@ -79,23 +66,21 @@ class OrderService
         $fulfilledNumbers = [];
         $actualTotalCostCents = 0;
 
-        foreach ($cartWithPrices as $item) {
-            $returnedData = PhoneNumberService::requestPhoneNumbers(
-                $item['service_code'],
-                $item['quantity'],
-                $user->id
-            );
+        $returnedData = PhoneNumberService::requestPhoneNumbers(
+            $serviceCode,
+            $quantity,
+            $user->id
+        );
 
-            // Loop through what actually came back
-            foreach ($returnedData as $phoneRecord) {
-                $fulfilledNumbers[] = [
-                    'service_code' => $item['service_code'],
-                    'phone_data' => $phoneRecord,
-                    'price_cents' => $item['unit_price']
-                ];
-                // Just add the unit price for each returned record
-                $actualTotalCostCents += $item['unit_price'];
-            }
+        // Loop through what actually came back
+        foreach ($returnedData as $phoneRecord) {
+            $fulfilledNumbers[] = [
+                'service_code' => $serviceCode,
+                'phone_data' => $phoneRecord,
+                'price' => $service['price'],
+            ];
+            // Just add the unit price for each returned record
+            $actualTotalCostCents += $service['price'] * 100;
         }
 
         if (empty($fulfilledNumbers)) {
@@ -104,7 +89,7 @@ class OrderService
 
         // --- STEP 4: Save to Database safely ---
         try {
-            $order = $this->repo->createOrderWithTransaction(
+            $response = $this->repo->createOrderWithTransaction(
                 $user,
                 $fulfilledNumbers,
                 $actualTotalCostCents,
@@ -112,9 +97,10 @@ class OrderService
             );
 
             return [
-                'order' => $order,
-                'total_cents' => $actualTotalCostCents,
+                'order' => $response['order'],
+                'total_price' => $actualTotalCostCents / 100,
                 'items_count' => count($fulfilledNumbers),
+                'numbers' => $response['numbers'],
             ];
         } catch (Exception $e) {
             Log::error('Order creation failed in database', ['error' => $e->getMessage()]);

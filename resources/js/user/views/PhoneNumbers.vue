@@ -1,8 +1,11 @@
 <script setup>
-import { onMounted, onUnmounted, ref, computed } from "vue";
+import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
 import { apiRequest } from "@/services/api";
+import { useAuthStore } from "@/stores/authStore";
+import OrderDialog from "@/components/OrderDialog.vue";
+import { useWsStore } from "@/stores/wsStore";
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -11,19 +14,73 @@ const phoneNumbers = ref([]);
 const totalRecords = ref(0);
 const first = ref(0);
 const rows = ref(20);
+const authStore = useAuthStore();
+const isOrderDialogVisible = ref(false);
+const wsStore = useWsStore();
 
-// --- Bulk Selection ---
+const showReloadPrompt = ref(false);
+
+watch(
+    () => wsStore.phoneRefundedLastUpdated,
+    (newValue) => {
+        if (!newValue) return;
+        fetchNumbers();
+        selectedNumbers.value = [];
+    },
+);
+
+watch(
+    () => wsStore.messageReceived,
+    (newMessage) => {
+        if (!newMessage) return;
+        
+        // Find the phone number this message belongs to.
+        const targetPhone = phoneNumbers.value.find(p => p.id === newMessage.order_item_id);
+
+        if (targetPhone) {
+            // 1. Add the message to the array safely
+            if (!targetPhone.messages) {
+                targetPhone.messages = [];
+            }
+            targetPhone.messages.push(newMessage);
+
+            // 2. Change the status to completed
+            targetPhone.status = "completed";
+
+            // 3. Highlight the message count bubble (uses the isActive property from your template)
+            targetPhone.isActive = true;
+            
+            // Remove the highlight after 3 seconds
+            setTimeout(() => {
+                targetPhone.isActive = false;
+            }, 3000);
+            
+            
+        } else {
+            // 4. Number is not on the current page, show the reload button
+            showReloadPrompt.value = true;
+        }
+    },
+);
+
+const handleReloadPrompt = () => {
+    showReloadPrompt.value = false;
+    applyFilters(); // Resets to page 1 and fetches latest data
+};
+
 const selectedNumbers = ref([]);
 const isDeletingBulk = ref(false);
 
 const selectablePhoneNumbers = computed(() => {
-    return phoneNumbers.value.filter(num => num.status !== 'pending');
+    return phoneNumbers.value.filter((num) => num.status !== "pending");
 });
 
 const isAllSelected = computed(() => {
     if (!selectablePhoneNumbers.value.length) return false;
-    const selectedIds = selectedNumbers.value.map(n => n.id);
-    return selectablePhoneNumbers.value.every(n => selectedIds.includes(n.id));
+    const selectedIds = selectedNumbers.value.map((n) => n.id);
+    return selectablePhoneNumbers.value.every((n) =>
+        selectedIds.includes(n.id),
+    );
 });
 
 const toggleAll = () => {
@@ -50,9 +107,8 @@ const statusOptions = [
 const now = ref(Date.now());
 let timeInterval = null;
 
-// --- Action Loading States ---
 const cancelLoading = ref({});
-const reuseLoading = ref({}); // NEW: Loading state for reuse action
+const reuseLoading = ref({});
 
 const buildQuery = (page) => {
     const params = new URLSearchParams();
@@ -99,7 +155,7 @@ const onPage = (event) => {
 const applyFilters = () => {
     first.value = 0;
     expandedRows.value = {};
-    selectedNumbers.value = []; 
+    selectedNumbers.value = [];
     fetchNumbers(1);
 };
 
@@ -123,11 +179,16 @@ const toggleRow = (row) => {
 
 const statusSeverity = (status) => {
     switch (status) {
-        case "completed": return "success";
-        case "exhausted": return "info";
-        case "timeout_refunded": return "warning";
-        case "cancelled": return "danger";
-        default: return "secondary";
+        case "completed":
+            return "success";
+        case "exhausted":
+            return "info";
+        case "timeout_refunded":
+            return "warning";
+        case "cancelled":
+            return "danger";
+        default:
+            return "secondary";
     }
 };
 
@@ -138,65 +199,85 @@ const canCancel = (createdAt) => {
     return diffMinutes >= 2;
 };
 
-// --- NEW: Copy Phone Number logic ---
 const copyToClipboard = async (text) => {
     try {
         await navigator.clipboard.writeText(text);
-        toast.add({ severity: 'success', summary: 'Copied', detail: 'Phone number copied to clipboard', life: 2000 });
+        toast.add({
+            severity: "success",
+            summary: "Copied",
+            detail: "Phone number copied to clipboard",
+            life: 2000,
+        });
     } catch (err) {
-        toast.add({ severity: 'error', summary: 'Error', detail: 'Failed to copy text', life: 2000 });
+        toast.add({
+            severity: "error",
+            summary: "Error",
+            detail: "Failed to copy text",
+            life: 2000,
+        });
     }
 };
 
-const handleCancel = (event, id) => {       
+const handleCancel = (event, id) => {
     confirm.require({
-        group: 'confirm-popup',
+        group: "confirm-popup",
         target: event.currentTarget,
-        message: 'Are you sure you want to cancel this number?',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
-        rejectClass: 'p-button-secondary p-button-outlined',
-        acceptLabel: 'Yes, Cancel',
-        rejectLabel: 'No',
+        message: "Are you sure you want to cancel this number?",
+        icon: "pi pi-exclamation-triangle",
+        acceptClass: "p-button-danger",
+        rejectClass: "p-button-secondary p-button-outlined",
+        acceptLabel: "Yes, Cancel",
+        rejectLabel: "No",
         accept: async () => {
             cancelLoading.value[id] = true;
             try {
-                await apiRequest(`/v1/phone-numbers/${id}/cancel`, { method: 'POST' });
-                toast.add({ severity: 'success', summary: 'Cancelled', detail: 'Phone number cancelled.', life: 3000 });
-                
+                await apiRequest(`/v1/phone-numbers/${id}/cancel`, {
+                    method: "POST",
+                });
+                toast.add({
+                    severity: "success",
+                    summary: "Cancelled",
+                    detail: "Phone number cancelled.",
+                    life: 3000,
+                });
+
                 const currentPage = Math.floor(first.value / rows.value) + 1;
+                authStore.hydrate();
                 fetchNumbers(currentPage);
             } catch (error) {
-                toast.add({ severity: 'error', summary: 'Cancel Failed', detail: error.message, life: 4000 });
+                toast.add({
+                    severity: "error",
+                    summary: "Cancel Failed",
+                    detail: error.message,
+                    life: 4000,
+                });
             } finally {
                 cancelLoading.value[id] = false;
             }
-        }
+        },
     });
 };
 
-// --- NEW: Handle Reuse logic ---
 const handleReuse = async (id) => {
     reuseLoading.value[id] = true;
     try {
-        await apiRequest(`/v1/phone-numbers/${id}/reuse`, { method: 'POST' });
-        
-        toast.add({ 
-            severity: 'success', 
-            summary: 'Reused', 
-            detail: 'Phone number requested for reuse.', 
-            life: 3000 
+        await apiRequest(`/v1/phone-numbers/${id}/reuse`, { method: "POST" });
+
+        toast.add({
+            severity: "success",
+            summary: "Reused",
+            detail: "Phone number requested for reuse.",
+            life: 3000,
         });
-        
-        // Refresh the table to show the new/updated record
+        authStore.hydrate();
         const currentPage = Math.floor(first.value / rows.value) + 1;
         fetchNumbers(currentPage);
     } catch (error) {
-        toast.add({ 
-            severity: 'error', 
-            summary: 'Reuse Failed', 
-            detail: error.message, 
-            life: 4000 
+        toast.add({
+            severity: "error",
+            summary: "Reuse Failed",
+            detail: error.message,
+            life: 4000,
         });
     } finally {
         reuseLoading.value[id] = false;
@@ -207,26 +288,26 @@ const handleBulkDelete = () => {
     if (!selectedNumbers.value.length) return;
 
     confirm.require({
-        group: 'confirm-dialog',
+        group: "confirm-dialog",
         message: `Are you sure you want to delete ${selectedNumbers.value.length} completed numbers? This action cannot be undone.`,
-        header: 'Confirm Deletion',
-        icon: 'pi pi-exclamation-triangle',
-        acceptClass: 'p-button-danger',
+        header: "Confirm Deletion",
+        icon: "pi pi-exclamation-triangle",
+        acceptClass: "p-button-danger",
         accept: async () => {
             isDeletingBulk.value = true;
-            const ids = selectedNumbers.value.map(num => num.id);
+            const ids = selectedNumbers.value.map((num) => num.id);
 
             try {
                 await apiRequest(`/phone-numbers/delete`, {
-                    method: 'DELETE',
-                    body: {ids}
+                    method: "DELETE",
+                    body: { ids },
                 });
 
                 toast.add({
-                    severity: 'success',
-                    summary: 'Deleted',
-                    detail: 'Selected numbers were successfully deleted.',
-                    life: 3000
+                    severity: "success",
+                    summary: "Deleted",
+                    detail: "Selected numbers were successfully deleted.",
+                    life: 3000,
                 });
 
                 selectedNumbers.value = [];
@@ -234,21 +315,23 @@ const handleBulkDelete = () => {
                 fetchNumbers(currentPage);
             } catch (error) {
                 toast.add({
-                    severity: 'error',
-                    summary: 'Deletion Failed',
+                    severity: "error",
+                    summary: "Deletion Failed",
                     detail: error.message,
-                    life: 4000
+                    life: 4000,
                 });
             } finally {
                 isDeletingBulk.value = false;
             }
-        }
+        },
     });
 };
 
 onMounted(() => {
     fetchNumbers();
-    timeInterval = setInterval(() => { now.value = Date.now(); }, 10000);
+    timeInterval = setInterval(() => {
+        now.value = Date.now();
+    }, 10000);
 });
 
 onUnmounted(() => {
@@ -258,13 +341,42 @@ onUnmounted(() => {
 
 <template>
     <div class="flex flex-col gap-4">
-        <div class="flex items-center justify-between">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
                 <h2 class="text-xl font-semibold">Phone Numbers</h2>
                 <p class="text-gray-600">All purchased numbers and services.</p>
             </div>
-            <Button v-if="selectedNumbers.length > 0" :label="`Delete Selected (${selectedNumbers.length})`"
-                icon="pi pi-trash" severity="danger" :loading="isDeletingBulk" @click="handleBulkDelete" />
+
+            <div class="flex items-center gap-3">
+                
+                <Button
+                    v-if="showReloadPrompt"
+                    label="New Updates! Reload"
+                    icon="pi pi-refresh"
+                    severity="info"
+                    class="animate-pulse"
+                    @click="handleReloadPrompt"
+                />
+
+                <div class="flex items-center text-sm font-medium px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-md">
+                    <span class="mr-1 text-gray-600 dark:text-gray-300">Capacity:</span>
+                    <span
+                        :class="
+                            authStore.maxCartAmount === 0
+                                ? 'text-orange-500 font-bold'
+                                : 'text-primary'
+                        "
+                    >
+                        {{ authStore.maxCartAmount }}
+                    </span>
+                </div>
+
+                <Button
+                    label="Place Order"
+                    icon="pi pi-plus"
+                    @click="isOrderDialogVisible = true"
+                />
+            </div>
         </div>
 
         <Card class="shadow-sm">
@@ -273,112 +385,230 @@ onUnmounted(() => {
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Service</label>
-                            <InputText v-model="serviceFilter" placeholder="Service name" class="w-full" />
+                            <InputText
+                                v-model="serviceFilter"
+                                placeholder="Service name"
+                                class="w-full"
+                            />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Phone number</label>
-                            <InputText v-model="phoneFilter" placeholder="Phone number" class="w-full" />
+                            <InputText
+                                v-model="phoneFilter"
+                                placeholder="Phone number"
+                                class="w-full"
+                            />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Status</label>
-                            <Dropdown v-model="statusFilter" :options="statusOptions" optionLabel="label"
-                                optionValue="value" placeholder="All statuses" class="w-full" />
+                            <Dropdown
+                                v-model="statusFilter"
+                                :options="statusOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="All statuses"
+                                class="w-full"
+                            />
                         </div>
                         <div class="flex items-end gap-2">
-                            <Button label="Apply" icon="pi pi-filter" @click="applyFilters" />
-                            <Button label="Clear" icon="pi pi-times" severity="secondary" @click="clearFilters" />
+                            <Button
+                                label="Apply"
+                                icon="pi pi-filter"
+                                @click="applyFilters"
+                            />
+                            <Button
+                                label="Clear"
+                                icon="pi pi-times"
+                                severity="secondary"
+                                @click="clearFilters"
+                            />
                         </div>
                     </div>
                 </div>
-
-                <DataTable lazy :value="phoneNumbers" :loading="loading" :paginator="true" :rows="rows"
-                    :totalRecords="totalRecords" :first="first" v-model:expandedRows="expandedRows" dataKey="id"
-                    @page="onPage">
-
+                <div class="flex p-2">
+                    <Button
+                        class="ms-auto"
+                        v-if="selectedNumbers.length > 0"
+                        :label="`Delete Selected (${selectedNumbers.length})`"
+                        icon="pi pi-trash"
+                        severity="danger"
+                        outlined
+                        :loading="isDeletingBulk"
+                        @click="handleBulkDelete"
+                    />
+                </div>
+                <DataTable
+                    lazy
+                    :value="phoneNumbers"
+                    :loading="loading"
+                    :paginator="true"
+                    :rows="rows"
+                    :totalRecords="totalRecords"
+                    :first="first"
+                    v-model:expandedRows="expandedRows"
+                    dataKey="id"
+                    @page="onPage"
+                >
                     <Column headerStyle="width: 3rem">
                         <template #header>
-                            <Checkbox :modelValue="isAllSelected" :binary="true" @update:modelValue="toggleAll"
+                            <Checkbox
+                                :modelValue="isAllSelected"
+                                :binary="true"
+                                @update:modelValue="toggleAll"
                                 :disabled="selectablePhoneNumbers.length === 0"
-                                v-tooltip.top="selectablePhoneNumbers.length === 0 ? 'No completed numbers to select' : 'Select all completed'" />
+                                v-tooltip.top="
+                                    selectablePhoneNumbers.length === 0
+                                        ? 'No completed numbers to select'
+                                        : 'Select all completed'
+                                "
+                            />
                         </template>
                         <template #body="slotProps">
-                            <Checkbox v-model="selectedNumbers" :value="slotProps.data"
-                                :disabled="slotProps.data.status === 'pending'" />
+                            <Checkbox
+                                v-model="selectedNumbers"
+                                :value="slotProps.data"
+                                :disabled="slotProps.data.status === 'pending'"
+                            />
                         </template>
                     </Column>
 
                     <Column expander style="width: 3rem" />
-                    
+
                     <Column style="width: 4rem">
                         <template #body="slotProps">
-                            <div :id="'msgCount_' + slotProps.data.id"
+                            <div
+                                :id="'msgCount_' + slotProps.data.id"
                                 class="flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold transition-colors duration-300"
-                                :class="slotProps.data.isActive
-                                    ? 'bg-green-500 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-900 dark:text-gray-200'
-                                    ">
-                                {{ slotProps.data.messages.length }}
+                                :class="
+                                    slotProps.data.isActive
+                                        ? 'bg-green-500 text-white shadow-[0_0_10px_rgba(34,197,94,0.6)]'
+                                        : 'bg-gray-100 dark:bg-gray-900 dark:text-gray-200'
+                                "
+                            >
+                                {{ slotProps.data.messages?.length || 0 }}
                             </div>
                         </template>
                     </Column>
-                    
-                    <Column field="service_name" header="Service" style="min-width: 12rem" />
-                    
-                    <Column field="phone_number" header="Phone number" style="min-width: 14rem">
+
+                    <Column
+                        field="service_name"
+                        header="Service"
+                        style="min-width: 12rem"
+                    />
+
+                    <Column
+                        field="phone_number"
+                        header="Phone number"
+                        style="min-width: 14rem"
+                    >
                         <template #body="slotProps">
                             <div class="flex items-center gap-2">
-                                <Button link class="p-0" @click.stop="toggleRow(slotProps.data)">
-                                    <span class="text-primary-600 underline">{{ slotProps.data.phone_number }}</span>
+                                <Button
+                                    link
+                                    class="p-0"
+                                    @click.stop="toggleRow(slotProps.data)"
+                                >
+                                    <span class="text-primary-600 underline">{{
+                                        slotProps.data.phone_number
+                                    }}</span>
                                 </Button>
-                                <Button 
-                                    icon="pi pi-copy" 
-                                    text 
-                                    rounded 
-                                    size="small" 
-                                    class="w-6 h-6 p-0 text-gray-500 hover:text-gray-700" 
-                                    @click.stop="copyToClipboard(slotProps.data.phone_number)" 
+                                <Button
+                                    icon="pi pi-copy"
+                                    text
+                                    rounded
+                                    size="small"
+                                    class="w-6 h-6 p-0 text-gray-500 hover:text-gray-700"
+                                    @click.stop="
+                                        copyToClipboard(
+                                            slotProps.data.phone_number,
+                                        )
+                                    "
                                     v-tooltip.top="'Copy Number'"
                                 />
                             </div>
                         </template>
                     </Column>
-                    
-                    <Column field="price_cents" header="Price" style="min-width: 8rem">
+
+                    <Column
+                        field="price_cents"
+                        header="Price"
+                        style="min-width: 8rem"
+                    >
                         <template #body="slotProps">
-                            $ {{ (slotProps.data.price_cents / 100).toFixed(2) }}
+                            $
+                            {{ (slotProps.data.price_cents / 100).toFixed(2) }}
                         </template>
                     </Column>
-                    
-                    <Column field="status" header="Status" style="min-width: 10rem">
+
+                    <Column
+                        field="status"
+                        header="Status"
+                        style="min-width: 10rem"
+                    >
                         <template #body="slotProps">
-                            <Tag :value="slotProps.data.status" :severity="statusSeverity(slotProps.data.status)" />
+                            <Tag
+                                :value="slotProps.data.status"
+                                :severity="
+                                    statusSeverity(slotProps.data.status)
+                                "
+                            />
                         </template>
                     </Column>
-                    
+
                     <Column header="Created" style="min-width: 12rem">
                         <template #body="slotProps">
                             {{
                                 new Intl.DateTimeFormat("en-CA", {
-                                    year: "numeric", month: "2-digit", day: "2-digit",
-                                    hour: "2-digit", minute: "2-digit", hour12: true,
-                                }).format(new Date(slotProps.data.created_at)).replace(", ", " ")
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                })
+                                    .format(new Date(slotProps.data.created_at))
+                                    .replace(", ", " ")
                             }}
                         </template>
                     </Column>
 
-                    <Column header="Actions" style="min-width: 12rem" alignFrozen="right">
+                    <Column
+                        header="Actions"
+                        style="min-width: 12rem"
+                        alignFrozen="right"
+                    >
                         <template #body="slotProps">
                             <div class="flex items-center gap-2">
-                                <Button v-if="slotProps.data.status === 'pending'" label="Cancel" severity="danger"
-                                    size="small" icon="pi pi-times" :disabled="!canCancel(slotProps.data.created_at)"
+                                <Button
+                                    v-if="slotProps.data.status === 'pending'"
+                                    label="Cancel"
+                                    severity="danger"
+                                    size="small"
+                                    icon="pi pi-times"
+                                    :disabled="
+                                        !canCancel(slotProps.data.created_at)
+                                    "
                                     :loading="cancelLoading[slotProps.data.id]"
-                                    :title="!canCancel(slotProps.data.created_at) ? 'Available 2 minutes after purchase' : ''"
-                                    @click="handleCancel($event, slotProps.data.id)" />
-                                    
-                                <Button v-if="slotProps.data.status === 'completed'" label="Reuse" severity="success" outlined
-                                    size="small" icon="pi pi-refresh"
+                                    :title="
+                                        !canCancel(slotProps.data.created_at)
+                                            ? 'Available 2 minutes after purchase'
+                                            : ''
+                                    "
+                                    @click="
+                                        handleCancel($event, slotProps.data.id)
+                                    "
+                                />
+
+                                <Button
+                                    v-if="slotProps.data.status === 'completed'"
+                                    label="Reuse"
+                                    severity="success"
+                                    outlined
+                                    size="small"
+                                    icon="pi pi-refresh"
                                     :loading="reuseLoading[slotProps.data.id]"
-                                    @click="handleReuse(slotProps.data.id)" />
+                                    @click="handleReuse(slotProps.data.id)"
+                                />
                             </div>
                         </template>
                     </Column>
@@ -386,17 +616,35 @@ onUnmounted(() => {
                     <template #expansion="slotProps">
                         <div class="p-4 bg-gray-50 dark:bg-gray-950 rounded-lg">
                             <h4 class="font-semibold mb-2">Messages</h4>
-                            <div v-if="slotProps.data.messages && slotProps.data.messages.length"
-                                class="flex flex-col gap-2">
-                                <div v-for="message in slotProps.data.messages" :key="message.id"
-                                    class="p-3 border border-gray-200 dark:border-gray-700 rounded-md">
+                            <div
+                                v-if="
+                                    slotProps.data.messages &&
+                                    slotProps.data.messages.length
+                                "
+                                class="flex flex-col gap-2"
+                            >
+                                <div
+                                    v-for="message in slotProps.data.messages"
+                                    :key="message.id"
+                                    class="p-3 border border-gray-200 dark:border-gray-700 rounded-md"
+                                >
                                     <p class="text-sm">{{ message.message }}</p>
                                     <p class="text-xs text-gray-500 mt-1">
                                         {{
                                             new Intl.DateTimeFormat("en-CA", {
-                                                year: "numeric", month: "2-digit", day: "2-digit",
-                                                hour: "2-digit", minute: "2-digit", hour12: true,
-                                            }).format(new Date(message.created_at)).replace(", ", " ")
+                                                year: "numeric",
+                                                month: "2-digit",
+                                                day: "2-digit",
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                                hour12: true,
+                                            })
+                                                .format(
+                                                    new Date(
+                                                        message.created_at,
+                                                    ),
+                                                )
+                                                .replace(", ", " ")
                                         }}
                                     </p>
                                 </div>
@@ -406,19 +654,41 @@ onUnmounted(() => {
                             </div>
                         </div>
                     </template>
-                    
+
                     <template #empty>
-                        <div v-if="!loading" class="flex flex-col items-center justify-center p-8 text-gray-500">
-                            <i class="pi pi-inbox text-4xl mb-4 text-gray-400"></i>
-                            <p class="text-lg font-medium">No Phone Numbers found.</p>
+                        <div
+                            v-if="!loading"
+                            class="flex flex-col items-center justify-center p-8 text-gray-500"
+                        >
+                            <i
+                                class="pi pi-inbox text-4xl mb-4 text-gray-400"
+                            ></i>
+                            <p class="text-lg font-medium">
+                                No Phone Numbers found.
+                            </p>
                         </div>
-                        <div v-else class="flex flex-col items-center justify-center p-8 text-gray-500">
-                            <i class="pi pi-spinner pi-spin text-4xl mb-4 text-blue-500 dark:text-blue-400"></i>
-                            <p class="text-lg font-medium">Loading phone numbers...</p>
+                        <div
+                            v-else
+                            class="flex flex-col items-center justify-center p-8 text-gray-500"
+                        >
+                            <i
+                                class="pi pi-spinner pi-spin text-4xl mb-4 text-blue-500 dark:text-blue-400"
+                            ></i>
+                            <p class="text-lg font-medium">
+                                Loading phone numbers...
+                            </p>
                         </div>
                     </template>
                 </DataTable>
             </template>
         </Card>
     </div>
+
+    <OrderDialog
+        v-model:visible="isOrderDialogVisible"
+        @hide="
+            fetchNumbers();
+            authStore.hydrate();
+        "
+    />
 </template>

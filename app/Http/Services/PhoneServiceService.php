@@ -8,14 +8,14 @@ use Illuminate\Support\Facades\Log;
 
 class PhoneServiceService
 {
-    const CACHE_KEY = 'phone_services_';
+    const CACHE_KEY = 'phone_services';
 
     public static function getPhoneServices(array $filters = []): array
     {
-        if (empty(Cache::get(self::CACHE_KEY . 'services', []))) {
-            Cache::forget(self::CACHE_KEY . 'services');
+        if (empty(Cache::get(self::CACHE_KEY, []))) {
+            Cache::forget(self::CACHE_KEY);
         }
-        $allServices = Cache::remember(self::CACHE_KEY . 'services', 3600, function () {
+        $allServices = Cache::remember(self::CACHE_KEY, 24 * 60 * 60, function () {
             try {
                 $response = Http::centralServer()
                     ->retry(3, 200)
@@ -72,5 +72,10 @@ class PhoneServiceService
         });
 
         return $filteredServices->values()->toArray();
+    }
+
+    public static function forgetCache(): void
+    {
+        Cache::forget(self::CACHE_KEY);
     }
 }
