@@ -10,6 +10,7 @@ use App\Models\OrderItem;
 use App\Repositories\Facades\OrderItemFacade;
 use App\Repositories\Facades\UserFacade;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class OrderItemsController extends Controller
 {
@@ -35,6 +36,13 @@ class OrderItemsController extends Controller
         if (Carbon::parse($orderItem->created_at)->diffInMinutes(Carbon::now()) < 2) {
             return $this->sendError('Phone number cannot be cancelled within 2 minutes of creation.', [], 400);
         }
+
+        $lock = Cache::lock('cancel_order_item_' . $orderItem->id, 10);
+
+        if (!$lock->get()) {
+            return $this->sendError('Cancellation is already in progress for this number.', [], 429);
+        }
+
         try {
             $success = PhoneNumberService::cancelPhoneNumber($orderItem->external_order_id, $request->user()->id);
             // $success = true; // Simulate success for testing purposes
@@ -46,6 +54,9 @@ class OrderItemsController extends Controller
             }
         } catch (\Exception $e) {
             return $this->sendError('Failed to cancel phone number: ' . $e->getMessage(), [], 500);
+        } finally {
+            // Always release the lock when finished
+            $lock->release();
         }
     }
 
@@ -81,7 +92,11 @@ class OrderItemsController extends Controller
         if (!$service || !UserFacade::checkBalance($request->user(), $service['price'])) {
             return $this->sendError('Insufficient balance to reuse phone number.', [], 400);
         }
+        $lock = Cache::lock('reuse_order_item_' . $orderItem->id, 10);
 
+        if (!$lock->get()) {
+            return $this->sendError('Reuse is already in progress for this number.', [], 429);
+        }
         try {
             $response = PhoneNumberService::reusePhoneNumber($orderItem->external_order_id, $request->user()->id);
             if ($response) {
@@ -93,6 +108,8 @@ class OrderItemsController extends Controller
         } catch (\Exception $e) {
             $orderItem->update(['status' => 'exhausted']);
             return $this->sendError('Failed to reuse phone number', [], 500);
+        } finally {
+            $lock->release();
         }
     }
 }

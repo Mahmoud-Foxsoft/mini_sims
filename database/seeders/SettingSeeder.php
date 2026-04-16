@@ -25,7 +25,7 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'site_email',
-                'value' => 'support@quicksms.io',
+                'value' => 'support@FasterVerify.io',
                 'type' => 'string',
                 'title' => 'Site Email',
             ],
@@ -48,7 +48,7 @@ class SettingSeeder extends Seeder
             // home seo
             [
                 'key' => 'home_title',
-                'value' => 'Buy SMS Numbers - QuickSMS',
+                'value' => 'Buy SMS Numbers - FasterVerify',
                 'type' => 'string',
                 'title' => 'Home Title',
             ],
@@ -320,13 +320,13 @@ class SettingSeeder extends Seeder
             // about seo
             [
                 'key' => 'about_title',
-                'value' => 'About - QuickSMS',
+                'value' => 'About - FasterVerify',
                 'type' => 'string',
                 'title' => 'About Title',
             ],
             [
                 'key' => 'about_description',
-                'value' => 'Learn how QuickSMS delivers verification numbers and instant refunds.',
+                'value' => 'Learn how FasterVerify delivers verification numbers and instant refunds.',
                 'type' => 'string',
                 'title' => 'About Description',
             ],
@@ -350,7 +350,7 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'about_lead',
-                'value' => 'QuickSMS provides phone numbers for specific services with a transparent refund policy so you only pay for successful messages.',
+                'value' => 'FasterVerify provides phone numbers for specific services with a transparent refund policy so you only pay for successful messages.',
                 'type' => 'string',
                 'title' => 'About Lead',
             ],
@@ -422,7 +422,7 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'about_values_heading',
-                'value' => 'Why Teams Use QuickSMS',
+                'value' => 'Why Teams Use FasterVerify',
                 'type' => 'string',
                 'title' => 'About Values Heading',
             ],
@@ -551,7 +551,7 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'contact_description',
-                'value' => 'Contact QuickSMS for help with numbers, refunds, and API access.',
+                'value' => 'Contact FasterVerify for help with numbers, refunds, and API access.',
                 'type' => 'string',
                 'title' => 'Contact Description',
             ],
@@ -626,13 +626,13 @@ class SettingSeeder extends Seeder
             // privacy
             [
                 'key' => 'privacy_title',
-                'value' => 'Privacy - QuickSMS',
+                'value' => 'Privacy - FasterVerify',
                 'type' => 'string',
                 'title' => 'Privacy Title',
             ],
             [
                 'key' => 'privacy_description',
-                'value' => 'Privacy policy for QuickSMS users.',
+                'value' => 'Privacy policy for FasterVerify users.',
                 'type' => 'string',
                 'title' => 'Privacy Description',
             ],
@@ -650,7 +650,7 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'privacy_content',
-                'value' => '<h2>1. Information We Collect</h2><p>We collect basic account information, payment confirmations, and service usage data needed to deliver phone numbers and messages.</p><h2>2. SMS Handling</h2><p>We store messages only as long as needed to display them in your account or API response. Messages are not sold or shared.</p><h2>3. Refund Logic</h2><p>If a number is unavailable or no message arrives within 15 minutes, your balance is refunded automatically.</p><h2>4. API Access</h2><p>API requests are logged for security and rate limiting. We do not store verification messages longer than necessary.</p><h2>5. Contact</h2><p>If you have privacy questions, contact us at support@quicksms.io.</p>',
+                'value' => '<h2>1. Information We Collect</h2><p>We collect basic account information, payment confirmations, and service usage data needed to deliver phone numbers and messages.</p><h2>2. SMS Handling</h2><p>We store messages only as long as needed to display them in your account or API response. Messages are not sold or shared.</p><h2>3. Refund Logic</h2><p>If a number is unavailable or no message arrives within 15 minutes, your balance is refunded automatically.</p><h2>4. API Access</h2><p>API requests are logged for security and rate limiting. We do not store verification messages longer than necessary.</p><h2>5. Contact</h2><p>If you have privacy questions, contact us at support@FasterVerify.io.</p>',
                 'type' => 'html',
                 'title' => 'Privacy Content',
             ],
@@ -658,13 +658,13 @@ class SettingSeeder extends Seeder
             // terms
             [
                 'key' => 'terms_title',
-                'value' => 'Terms - QuickSMS',
+                'value' => 'Terms - FasterVerify',
                 'type' => 'string',
                 'title' => 'Terms Title',
             ],
             [
                 'key' => 'terms_description',
-                'value' => 'Terms of service for QuickSMS.',
+                'value' => 'Terms of service for FasterVerify.',
                 'type' => 'string',
                 'title' => 'Terms Description',
             ],
@@ -676,13 +676,13 @@ class SettingSeeder extends Seeder
             ],
             [
                 'key' => 'terms_page_intro',
-                'value' => 'By using QuickSMS, you agree to the terms below.',
+                'value' => 'By using FasterVerify, you agree to the terms below.',
                 'type' => 'string',
                 'title' => 'Terms Page Intro',
             ],
             [
                 'key' => 'terms_content',
-                'value' => '<h2>1. Service Scope</h2><p>QuickSMS provides temporary phone numbers for receiving SMS messages for specific services.</p><h2>2. Availability</h2><p>Numbers are provided based on availability. If you request five numbers and only three are available, the remaining amount is refunded automatically.</p><h2>3. Message Delivery</h2><p>Messages are expected within 15 minutes. If no message arrives in that time window, the order is refunded automatically.</p><h2>4. API Use</h2><p>You may use the API to automate number purchases and message retrieval. Abuse or excessive requests may result in limits.</p><h2>5. Refunds</h2><p>Refunds are credited to your balance for any unavailable numbers or expired message waits.</p><h2>6. Contact</h2><p>For questions about these terms, contact support@quicksms.io.</p>',
+                'value' => '<h2>1. Service Scope</h2><p>FasterVerify provides temporary phone numbers for receiving SMS messages for specific services.</p><h2>2. Availability</h2><p>Numbers are provided based on availability. If you request five numbers and only three are available, the remaining amount is refunded automatically.</p><h2>3. Message Delivery</h2><p>Messages are expected within 15 minutes. If no message arrives in that time window, the order is refunded automatically.</p><h2>4. API Use</h2><p>You may use the API to automate number purchases and message retrieval. Abuse or excessive requests may result in limits.</p><h2>5. Refunds</h2><p>Refunds are credited to your balance for any unavailable numbers or expired message waits.</p><h2>6. Contact</h2><p>For questions about these terms, contact support@FasterVerify.io.</p>',
                 'type' => 'html',
                 'title' => 'Terms Content',
             ],

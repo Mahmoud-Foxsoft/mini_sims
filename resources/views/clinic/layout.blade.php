@@ -9,7 +9,7 @@
     <meta name="keywords" content="@yield('keywords')">
 
     <!-- Favicons -->
-    <link href="{{ asset('web_assets/img/favicon.png') }}" rel="icon">
+    <link href="{{ asset('favicon.ico') }}" rel="icon">
     <link href="{{ asset('web_assets/img/apple-touch-icon.png') }}" rel="apple-touch-icon">
 
     <!-- Fonts -->

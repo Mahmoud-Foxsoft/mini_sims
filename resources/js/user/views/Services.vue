@@ -16,13 +16,6 @@ watch(
 const nameFilter = ref(null);
 const codeFilter = ref(null);
 const priceFilter = ref(null);
-const availableFilter = ref(null);
-
-const availableOptions = [
-    { label: "All", value: null },
-    { label: "Available", value: true },
-    { label: "Unavailable", value: false },
-];
 
 const buildQuery = () => {
     const params = new URLSearchParams();
@@ -35,9 +28,6 @@ const buildQuery = () => {
     }
     if (priceFilter.value !== null && priceFilter.value !== "") {
         params.set("filters[price]", String(priceFilter.value));
-    }
-    if (availableFilter.value !== null) {
-        params.set("filters[available]", String(availableFilter.value));
     }
 
     return params.toString();
@@ -76,12 +66,7 @@ const clearFilters = () => {
     nameFilter.value = null;
     codeFilter.value = null;
     priceFilter.value = null;
-    availableFilter.value = null;
     fetchServices();
-};
-
-const getAvailabilitySeverity = (isAvailable) => {
-    return isAvailable ? "success" : "secondary";
 };
 
 onMounted(() => fetchServices());
@@ -136,19 +121,6 @@ onMounted(() => fetchServices());
                                 @keyup.enter="applyFilters"
                             />
                         </div>
-                        <div class="flex flex-col gap-2">
-                            <label class="font-medium text-sm"
-                                >Availability</label
-                            >
-                            <Dropdown
-                                v-model="availableFilter"
-                                :options="availableOptions"
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Any Status"
-                                class="w-full"
-                            />
-                        </div>
                         <div class="flex items-center gap-2">
                             <Button
                                 label="Apply"
@@ -195,23 +167,6 @@ onMounted(() => fetchServices());
                     >
                         <template #body="{ data }">
                             ${{ Number(data.price).toFixed(2) }}
-                        </template>
-                    </Column>
-
-                    <Column
-                        field="available"
-                        header="Status"
-                        style="min-width: 10rem"
-                    >
-                        <template #body="{ data }">
-                            <Tag
-                                :value="
-                                    data.available ? 'Available' : 'Unavailable'
-                                "
-                                :severity="
-                                    getAvailabilitySeverity(data.available)
-                                "
-                            />
                         </template>
                     </Column>
 

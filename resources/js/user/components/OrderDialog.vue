@@ -17,7 +17,7 @@ const isSubmitting = ref(false);
 
 const selectedService = ref(null);
 const quantity = ref(1);
-
+const emits = defineEmits(["submit"]);
 const displayServices = computed(() => {
     return localServices.value;
 });
@@ -101,7 +101,7 @@ const handleCheckout = async () => {
             quantity: quantity.value,
         };
 
-        await apiRequest("/v1/orders", {
+        const response = await apiRequest("/v1/orders", {
             method: "POST",
             body: payload,
         });
@@ -114,6 +114,7 @@ const handleCheckout = async () => {
         });
 
         visible.value = false;
+        emits("submit",response);
     } catch (error) {
         toast.add({
             severity: "error",

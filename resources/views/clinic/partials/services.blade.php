@@ -10,7 +10,6 @@
                 <th scope="col">Service Name</th>
                 <th scope="col">Code</th>
                 <th scope="col">Price</th>
-                <th scope="col">Status</th>
             </tr>
         </thead>
         <tbody>
@@ -19,13 +18,6 @@
                     <td>{{ $service['name'] ?? 'N/A' }}</td>
                     <td>{{ $service['code'] ?? 'N/A' }}</td>
                     <td>$ {{ $service['price'] ?? '0.00' }}</td>
-                    <td>
-                        @if(!empty($service['available']))
-                            <span class="badge bg-success">Available</span>
-                        @else
-                            <span class="badge bg-secondary">Unavailable</span>
-                        @endif
-                    </td>
                 </tr>
             @empty
                 <tr>

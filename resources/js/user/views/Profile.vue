@@ -39,7 +39,10 @@ const loadProfile = async () => {
 const updateProfile = async () => {
     saving.value = true;
     try {
-        const payload = { name: form.value.name, webhook_url: form.value.webhook_url };
+        const payload = {
+            name: form.value.name,
+            webhook_url: form.value.webhook_url,
+        };
         if (form.value.password) {
             payload.password = form.value.password;
             payload.password_confirmation = form.value.password_confirmation;
@@ -107,9 +110,7 @@ onMounted(loadProfile);
                     <div class="flex flex-col gap-4">
                         <div class="flex flex-col gap-4 md:gap-2 md:flex-row">
                             <div class="flex flex-col gap-2 flex-1">
-                                <label class="font-medium" for="profile-name"
-                                    >Name</label
-                                >
+                                <label class="font-medium" for="profile-name">Name</label>
                                 <InputText
                                     id="profile-name"
                                     v-model="form.name"
@@ -118,9 +119,7 @@ onMounted(loadProfile);
                                 />
                             </div>
                             <div class="flex flex-col gap-2 flex-1">
-                                <label class="font-medium" for="profile-webhook-url"
-                                    >Webhook URL</label
-                                >
+                                <label class="font-medium" for="profile-webhook-url">Webhook URL</label>
                                 <InputText
                                     id="profile-webhook-url"
                                     v-model="form.webhook_url"
@@ -132,11 +131,7 @@ onMounted(loadProfile);
                         </div>
                         <div class="flex flex-col gap-4 md:gap-2 md:flex-row">
                             <div class="flex flex-col gap-2 flex-1">
-                                <label
-                                    class="font-medium"
-                                    for="profile-password"
-                                    >New password</label
-                                >
+                                <label class="font-medium" for="profile-password">New password</label>
                                 <Password
                                     id="profile-password"
                                     v-model="form.password"
@@ -148,11 +143,7 @@ onMounted(loadProfile);
                                 />
                             </div>
                             <div class="flex flex-col gap-2 flex-1">
-                                <label
-                                    class="font-medium"
-                                    for="profile-password-confirm"
-                                    >Confirm password</label
-                                >
+                                <label class="font-medium" for="profile-password-confirm">Confirm password</label>
                                 <Password
                                     id="profile-password-confirm"
                                     v-model="form.password_confirmation"
@@ -176,18 +167,19 @@ onMounted(loadProfile);
             <Card class="shadow-sm">
                 <template #title>API Key</template>
                 <template #content>
-                    <p class="text-sm text-gray-600">
-                        Rotate your API key when needed for external
-                        integrations.
+                    <p class="text-base text-gray-500">
+                        Rotate your API key when needed for external integrations.
                     </p>
-                    <div class="flex flex-col gap-2">
+                    <p class="text-sm text-gray-600 mt-2">
+                        The Api key expires after 1 year.
+                    </p>
+                    <div class="flex flex-col gap-2 mt-4">
                         <Button
                             label="Rotate API key"
-                            class="mt-4"
                             severity="secondary"
                             @click="rotateApiKey"
                         />
-                        <a target="_blank" href="/v1/docs" class="mt-4 w-full">
+                        <a target="_blank" href="/v1/docs" class="w-full">
                             <Button
                                 label="View docs"
                                 class="w-full"
@@ -199,6 +191,23 @@ onMounted(loadProfile);
             </Card>
         </div>
 
+        <Card class="shadow-sm">
+            <template #title>Webhook Payload Information</template>
+            <template #content>
+                <p class="text-gray-600 mb-4">
+                    When a message is received, a <code>POST</code> request will be sent to your configured Webhook URL containing the following JSON payload:
+                </p>
+                <div class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto border border-gray-200 dark:border-gray-700">
+                    <pre class="text-sm text-gray-800 dark:text-gray-200 font-mono"><code>{
+  "phone_number_id": "the phone number id",
+  "phone_number": "the phone number",
+  "service_name": "the service name",
+  "message": "the message"
+}</code></pre>
+                </div>
+            </template>
+        </Card>
+
         <Dialog
             v-model:visible="apiKeyDialog"
             header="New API key"
@@ -208,9 +217,7 @@ onMounted(loadProfile);
             <p class="text-sm text-gray-600">
                 Copy and store this key. It will not be shown again.
             </p>
-            <div
-                class="mt-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg break-all"
-            >
+            <div class="mt-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg break-all">
                 {{ apiKey }}
             </div>
             <div class="mt-4 flex justify-end">

@@ -18,9 +18,8 @@ class UserController extends Controller
         if ($request->input('select')) {
             $users = UserFacade::getForSelect($request->input('email') ?? '');
         } else {
-            $users = UserFacade::getPaginatedWithSubscriptions(
+            $users = UserFacade::filter(
                 (array) $request->input('filters'),
-                (int) $request->input('per_page', 25)
             );
         }
         if (! $users) {
@@ -30,19 +29,6 @@ class UserController extends Controller
         return $this->sendResponse($users, 'Users retrieved successfully');
     }
 
-    /**
-     * Display the specified user with full details.
-     */
-    public function show(int $id): JsonResponse
-    {
-        $user = UserFacade::getAdminDetailsById($id);
-
-        if (! $user) {
-            return $this->sendError('User not found', [], 404);
-        }
-
-        return $this->sendResponse($user, 'User retrieved successfully');
-    }
 
     /**
      * Update the specified resource in storage.

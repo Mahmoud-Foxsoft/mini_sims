@@ -5,7 +5,9 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Guarded;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\MassPrunable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,7 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class Payment extends Model
 {
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
-    use HasFactory;
+    use HasFactory, MassPrunable;
 
     // Payment Statuses
     public const WAITING_STATUS = 'waiting';
@@ -37,4 +39,9 @@ class Payment extends Model
     protected $casts = [
         'has_used' => 'boolean',
     ];
+    public function prunable(): Builder
+    {
+        return static::where('created_at', '<=', now()->subMinutes(20))->where('status', Payment::WAITING_STATUS);
+    }
+
 }

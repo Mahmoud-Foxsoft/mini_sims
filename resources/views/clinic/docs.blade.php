@@ -5,7 +5,7 @@
 @extends('clinic.layout')
 
 @section('title', 'API Docs')
-@section('description', 'QuickSMS external API documentation')
+@section('description', 'FasterVerify external API documentation')
 @section('keywords', 'api, docs, sms, numbers')
 @section('body_class', 'docs-page')
 
@@ -16,7 +16,7 @@
                 <div class="row d-flex justify-content-center text-center">
                     <div class="col-lg-8">
                         <h1 class="heading-title">API Documentation</h1>
-                        <p class="mb-0">Use the external API to fetch services, orders, payments, and messages.</p>
+                        <p class="mb-0">Use the external API to fetch and manage services, orders, payments, and messages.</p>
                     </div>
                 </div>
             </div>
@@ -41,10 +41,14 @@
                         <a href="#auth">Authentication</a>
                         <a href="#api-key">API Key</a>
                         <a href="#downloads">Downloads</a>
+                        <a href="#filtering">Filtering</a>
                         <a href="#endpoints">Endpoints</a>
                         <a href="#get-me">GET /me</a>
                         <a href="#get-orders">GET /orders</a>
+                        <a href="#post-orders">POST /orders</a>
                         <a href="#get-phone-numbers">GET /phone-numbers</a>
+                        <a href="#post-phone-numbers-cancel">POST /phone-numbers/{id}/cancel</a>
+                        <a href="#post-phone-numbers-reuse">POST /phone-numbers/{id}/reuse</a>
                         <a href="#get-transactions">GET /transactions</a>
                         <a href="#get-services">GET /services</a>
                         <a href="#get-payments">GET /payments</a>
@@ -72,7 +76,15 @@
 
                     <div id="downloads">
                         <h2>Downloads</h2>
-                        <p><a href="/quicksms-api.postman_collection.json" download>Download Postman Collection</a></p>
+                        <p><a href="/fasterverify-api.postman_collection.json" download>Download Postman Collection</a></p>
+                    </div>
+
+                    <div id="filtering">
+                        <h2>Filtering</h2>
+                        <p>Many of our list endpoints support filtering to help you find specific records. When an endpoint supports filtering, you can pass filters as query parameters using the <code>filters[field_name]=value</code> syntax.</p>
+                        <p>To use multiple filters at once, simply chain them together with an ampersand (<code>&</code>).</p>
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/endpoint?filters[status]=active&filters[type]=example" \
+  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
                     </div>
 
                     <div id="endpoints">
@@ -105,7 +117,14 @@
                     <div id="get-orders">
                         <h3>GET /orders</h3>
                         <p>List your orders.</p>
-                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/orders?filters[created_at]=2026-04-01" \
+
+                        <h4>Available Filters</h4>
+                        <ul class="mb-3">
+                            <li><code>filters[created_at]</code> - Filter orders by creation date (e.g., 2026-04-01).</li>
+                            <li><code>filters[status]</code> - Filter orders by their status (e.g., completed).</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/orders" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
                         <h4>Success Response</h4>
@@ -158,10 +177,69 @@
 }</code></pre>
                     </div>
 
+                    <div id="post-orders">
+                        <h3>POST /orders</h3>
+                        <p>Create a new order for phone numbers.</p>
+
+                        <h4>Request Body</h4>
+                        <ul class="mb-3">
+                            <li><code>service_code</code> (required, string) - The code of the service you want to order.</li>
+                            <li><code>quantity</code> (required, integer) - The amount of numbers to order.</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/orders" \
+  -H "Authorization: Bearer &lt;token&gt;" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "service_code": "service_10",
+    "quantity": 1
+  }'</code></pre>
+
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+    "success": true,
+    "data": {
+        "order": {
+            "user_id": 1,
+            "total_cent_price": 1500,
+            "status": "completed",
+            "id": "019d9671-ad34-7289-95df-43241a8152ac",
+            "updated_at": "2026-04-16T13:18:45.000000Z",
+            "created_at": "2026-04-16T13:18:45.000000Z"
+        },
+        "total_price": 15,
+        "items_count": 1,
+        "numbers": [
+            {
+                "id": 25,
+                "order_id": "019d9671-ad34-7289-95df-43241a8152ac",
+                "user_id": 1,
+                "service_name": "Service 10",
+                "phone_number": "15550000004",
+                "price_cents": 1500,
+                "status": "pending",
+                "created_at": "2026-04-16T13:18:45.000000Z",
+                "updated_at": "2026-04-16T13:18:45.000000Z"
+            }
+        ]
+    },
+    "message": "Order created successfully."
+}</code></pre>
+                    </div>
+
                     <div id="get-phone-numbers">
                         <h3>GET /phone-numbers</h3>
                         <p>List order items and include received messages.</p>
-                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/phone-numbers?filters[service_name]=telegram&filters[status]=pending&filters[phone_number]=+1555" \
+
+                        <h4>Available Filters</h4>
+                        <ul class="mb-3">
+                            <li><code>filters[service_name]</code> - Filter by the service name (e.g., telegram).</li>
+                            <li><code>filters[status]</code> - Filter by the order item status (e.g., pending).</li>
+                            <li><code>filters[phone_number]</code> - Filter by a specific phone number.</li>
+                            <li><code>filters[order_id]</code> - Filter by a specific order ID.</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/phone-numbers" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
                         <h4>Success Response</h4>
@@ -226,10 +304,58 @@
 }</code></pre>
                     </div>
 
+                    <div id="post-phone-numbers-cancel">
+                        <h3>POST /phone-numbers/{id}/cancel</h3>
+                        <p>Cancel a pending phone number order item.</p>
+
+                        <h4>Path Parameters</h4>
+                        <ul class="mb-3">
+                            <li><code>id</code> (required, integer) - The ID of the phone number.</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/phone-numbers/25/cancel" \
+  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
+
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": null,
+  "message": "Phone number cancelled successfully."
+}</code></pre>
+                    </div>
+
+                    <div id="post-phone-numbers-reuse">
+                        <h3>POST /phone-numbers/{id}/reuse</h3>
+                        <p>Reuse a previously ordered phone number.</p>
+
+                        <h4>Path Parameters</h4>
+                        <ul class="mb-3">
+                            <li><code>id</code> (required, integer) - The ID of the phone number.</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X POST "{{ $baseUrl }}/phone-numbers/25/reuse" \
+  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
+
+                        <h4>Success Response</h4>
+                        <pre><code class="language-json">{
+  "success": true,
+  "data": null,
+  "message": "Phone number reused successfully."
+}</code></pre>
+                    </div>
+
                     <div id="get-transactions">
                         <h3>GET /transactions</h3>
                         <p>Get your transaction history.</p>
-                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/transactions?per_page=20&filters[type]=credit&filters[source]=payment&filters[reference]=abc" \
+
+                        <h4>Available Filters</h4>
+                        <ul class="mb-3">
+                            <li><code>filters[type]</code> - Filter by the transaction type (e.g., credit, debit).</li>
+                            <li><code>filters[source]</code> - Filter by the source of the transaction (e.g., payment).</li>
+                            <li><code>filters[reference]</code> - Filter by a specific reference identifier.</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/transactions" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
                         <h4>Success Response</h4>
@@ -287,10 +413,19 @@
   "message": "Transactions fetched successfully"
 }</code></pre>
                     </div>
+
                     <div id="get-services">
                         <h3>GET /services</h3>
                         <p>Get available phone services.</p>
-                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/services?filters[name]=service 1" \
+
+                        <h4>Available Filters</h4>
+                        <ul class="mb-3">
+                            <li><code>filters[name]</code> - Search for a service by its name (e.g., Telegram, WhatsApp).</li>
+                            <li><code>filters[code]</code> - Filter for a service using its exact unique identifier code.</li>
+                            <li><code>filters[price]</code> - Filter for a service using its price.</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/services" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
                         <h4>Success Response</h4>
@@ -315,10 +450,18 @@
     "message": "Phone services retrieved successfully"
 }</code></pre>
                     </div>
+
                     <div id="get-payments">
                         <h3>GET /payments</h3>
                         <p>List payments.</p>
-                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments?filters[status]=finished&filters[created_date]=2026-04-01" \
+
+                        <h4>Available Filters</h4>
+                        <ul class="mb-3">
+                            <li><code>filters[status]</code> - Filter by the payment status (e.g., finished, pending).</li>
+                            <li><code>filters[created_date]</code> - Filter payments by their creation date (e.g., 2026-04-01).</li>
+                        </ul>
+
+                        <pre><code class="language-bash">curl -X GET "{{ $baseUrl }}/payments" \
   -H "Authorization: Bearer &lt;token&gt;"</code></pre>
 
                         <h4>Success Response</h4>

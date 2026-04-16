@@ -31,7 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
     })->withSchedule(function (Schedule $schedule) {
         $schedule->command(App\Console\Commands\ExpirePhoneNumber::class)->everyMinute();
         $schedule->command('model:prune')->daily();
-        $schedule->command('passport:purge')->daily();
+        $schedule->command('passport:purge')->hourly();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -30,7 +30,6 @@ class PhoneServiceService
                             'name' => $service['name'] ?? '',
                             'code' => $service['code'] ?? '',
                             'price' => isset($service['price']) ? $service['price'] / 100 : 0, // Convert cents to dollars
-                            'available' => ($service['available'] ?? 0) > 0
                         ];
                     }
                 }
@@ -59,13 +58,6 @@ class PhoneServiceService
 
             if (isset($filters['price']) && $service['price'] != $filters['price']) {
                 return false;
-            }
-
-            if (isset($filters['available'])) {
-                $isAvailable = filter_var($filters['available'], FILTER_VALIDATE_BOOLEAN);
-                if ($service['available'] !== $isAvailable) {
-                    return false;
-                }
             }
 
             return true;

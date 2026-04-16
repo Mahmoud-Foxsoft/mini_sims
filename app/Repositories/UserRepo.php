@@ -28,8 +28,6 @@ class UserRepo implements UserInterface
         if (!$user) {
             return false;
         }
-        $password = !empty($data['password']) ? bcrypt($data['password']) : $user->password;
-        $data['password'] = $password;
         return $user->update($data);
     }
 

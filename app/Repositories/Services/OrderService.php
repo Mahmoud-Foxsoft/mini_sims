@@ -6,7 +6,6 @@ use App\Http\Services\PhoneNumberService;
 use App\Http\Services\PhoneServiceService;
 use App\Models\Order;
 use App\Models\User;
-use App\Models\UserPlan;
 use App\Repositories\Facades\OrderItemFacade;
 use App\Repositories\Facades\UserFacade;
 use App\Repositories\Interfaces\OrderInterface;
@@ -35,11 +34,9 @@ class OrderService
     }
     public function processOrder(User $user, string $serviceCode, int $quantity): array
     {
-
+        // --- 1. CAPACITY & SERVICE CHECKS ---
         $baseMaxAmount = $user->max_pending_numbers ?? (int) config('app.max_pending_numbers');
-
         $amountUsedByUser = OrderItemFacade::countPendingNumbers($user->id);
-
         $availableSpace = max(0, $baseMaxAmount - $amountUsedByUser);
 
         if ($quantity > $availableSpace) {
@@ -48,51 +45,57 @@ class OrderService
 
         $services = PhoneServiceService::getPhoneServices();
         $servicesByCode = collect($services)->keyBy('code');
-
         $service = $servicesByCode->get($serviceCode);
 
         if (!$service) {
             throw new Exception("Service with code {$serviceCode} not found", 404);
         }
 
-        $maxPotentialCost = $service['price'] * $quantity;
+        $maxPotentialCost = $service['price'] * 100 * $quantity;
 
-        // --- STEP 2: Check User Balance ---
-        if (!UserFacade::checkBalance($user, $maxPotentialCost)) {
+        // --- 2. THE ATOMIC RESERVATION ---
+        // This query says: "Only deduct the balance if they have enough money".
+        // It happens instantly in the database, preventing race conditions.
+        // Notice we do NOT create a WalletTransaction yet.
+        $reserved = User::where('id', $user->id)
+            ->where('balance_cents', '>=', $maxPotentialCost)
+            ->decrement('balance_cents', $maxPotentialCost);
+
+        if (!$reserved) {
             throw new Exception('Insufficient balance to complete this order.', 402);
         }
 
-        // --- STEP 3: Request numbers from Central Server ---
         $fulfilledNumbers = [];
-        $actualTotalCostCents = 0;
 
-        $returnedData = PhoneNumberService::requestPhoneNumbers(
-            $serviceCode,
-            $quantity,
-            $user->id
-        );
-
-        // Loop through what actually came back
-        foreach ($returnedData as $phoneRecord) {
-            $fulfilledNumbers[] = [
-                'service_code' => $serviceCode,
-                'phone_data' => $phoneRecord,
-                'price' => $service['price'],
-            ];
-            // Just add the unit price for each returned record
-            $actualTotalCostCents += $service['price'] * 100;
-        }
-
-        if (empty($fulfilledNumbers)) {
-            throw new Exception('Failed to obtain any phone numbers from the provider. Please try again later.', 503);
-        }
-
-        // --- STEP 4: Save to Database safely ---
         try {
+            // --- 3. CALL EXTERNAL API ---
+            $actualTotalCostCents = 0;
+
+            $returnedData = PhoneNumberService::requestPhoneNumbers(
+                $serviceCode,
+                $quantity,
+                $user->id
+            );
+
+            foreach ($returnedData as $phoneRecord) {
+                $fulfilledNumbers[] = [
+                    'service_code' => $serviceCode,
+                    'phone_data' => $phoneRecord,
+                    'price' => $service['price'] * 100,
+                ];
+                $actualTotalCostCents += $service['price'] * 100;
+            }
+
+            if (empty($fulfilledNumbers)) {
+                throw new Exception('Failed to obtain any phone numbers from the provider.', 503);
+            }
+
+            // --- 4. FINALIZE IN REPOSITORY ---
             $response = $this->repo->createOrderWithTransaction(
                 $user,
                 $fulfilledNumbers,
                 $actualTotalCostCents,
+                $maxPotentialCost, // Passing this so the repo knows how much to refund
                 $servicesByCode
             );
 
@@ -103,16 +106,21 @@ class OrderService
                 'numbers' => $response['numbers'],
             ];
         } catch (Exception $e) {
-            Log::error('Order creation failed in database', ['error' => $e->getMessage()]);
+            // --- 5. COMPENSATION (IF ANYTHING FAILED) ---
+            // Put the silently reserved money back into their account
+            User::where('id', $user->id)->increment('balance_cents', $maxPotentialCost);
 
-            // Compensating transaction: Release external numbers if DB fails
-            foreach ($fulfilledNumbers as $item) {
-                if (isset($item['phone_data']['id'])) {
-                    PhoneNumberService::cancelPhoneNumber($item['phone_data']['request_id'], $user->id);
+            // Cancel any numbers that the provider actually gave us before the crash
+            if (!empty($fulfilledNumbers)) {
+                foreach ($fulfilledNumbers as $item) {
+                    if (isset($item['phone_data']['request_id'])) {
+                        PhoneNumberService::cancelPhoneNumber($item['phone_data']['request_id'], $user->id);
+                    }
                 }
             }
 
-            throw new Exception('Failed to create order. All allocated phone numbers have been released.', 500);
+            Log::error('Order process failed', ['error' => $e->getMessage()]);
+            throw new Exception($e->getMessage(), $e->getCode() ?: 500);
         }
     }
 }

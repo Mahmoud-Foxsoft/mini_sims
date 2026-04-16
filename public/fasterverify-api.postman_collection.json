@@ -1,0 +1,296 @@
+{
+	"info": {
+		"name": "FasterVerify API",
+		"description": "FasterVerify external API documentation for fetching services, orders, payments, and messages.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{token}}",
+				"type": "string"
+			}
+		]
+	},
+	"item": [
+		{
+			"name": "GET /me",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/me",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"me"
+					]
+				},
+				"description": "Returns the authenticated user profile."
+			}
+		},
+		{
+			"name": "GET /orders",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/orders?filters[created_at]=2026-04-01",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders"
+					],
+					"query": [
+						{
+							"key": "filters[created_at]",
+							"value": "2026-04-01",
+							"description": "Filter orders by creation date"
+						}
+					]
+				},
+				"description": "List your orders."
+			}
+		},
+		{
+			"name": "POST /orders",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"service_code\": \"service_10\",\n    \"quantity\": 1\n}"
+				},
+				"url": {
+					"raw": "{{baseUrl}}/orders",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"orders"
+					]
+				},
+				"description": "Create a new order for phone numbers."
+			}
+		},
+		{
+			"name": "GET /phone-numbers",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/phone-numbers?filters[service_name]=telegram&filters[status]=pending&filters[phone_number]=15550000004",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"phone-numbers"
+					],
+					"query": [
+						{
+							"key": "filters[service_name]",
+							"value": "telegram",
+							"description": "Filter by the service name"
+						},
+						{
+							"key": "filters[status]",
+							"value": "pending",
+							"description": "Filter by the order item status"
+						},
+						{
+							"key": "filters[phone_number]",
+							"value": "15550000004",
+							"description": "Filter by a specific phone number"
+						}
+					]
+				},
+				"description": "List order items and include received messages."
+			}
+		},
+		{
+			"name": "POST /phone-numbers/{id}/cancel",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/phone-numbers/:id/cancel",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"phone-numbers",
+						":id",
+						"cancel"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "25",
+							"description": "The ID of the phone number (order item)"
+						}
+					]
+				},
+				"description": "Cancel a pending phone number order item."
+			}
+		},
+		{
+			"name": "POST /phone-numbers/{id}/reuse",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/phone-numbers/:id/reuse",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"phone-numbers",
+						":id",
+						"reuse"
+					],
+					"variable": [
+						{
+							"key": "id",
+							"value": "25",
+							"description": "The ID of the phone number (order item)"
+						}
+					]
+				},
+				"description": "Reuse a previously ordered phone number."
+			}
+		},
+		{
+			"name": "GET /transactions",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/transactions?filters[type]=credit&filters[source]=payment&filters[reference]=abc",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"transactions"
+					],
+					"query": [
+						{
+							"key": "filters[type]",
+							"value": "credit",
+							"description": "Filter by the transaction type"
+						},
+						{
+							"key": "filters[source]",
+							"value": "payment",
+							"description": "Filter by the source of the transaction"
+						},
+						{
+							"key": "filters[reference]",
+							"value": "abc",
+							"description": "Filter by a specific reference identifier"
+						}
+					]
+				},
+				"description": "Get your transaction history."
+			}
+		},
+		{
+			"name": "GET /services",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/services?filters[name]=Service 1&filters[code]=service_1",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"services"
+					],
+					"query": [
+						{
+							"key": "filters[name]",
+							"value": "Service 1",
+							"description": "Search for a service by its name"
+						},
+						{
+							"key": "filters[code]",
+							"value": "service_1",
+							"description": "Filter for a service using its exact unique identifier code"
+						}
+					]
+				},
+				"description": "Get available phone services."
+			}
+		},
+		{
+			"name": "GET /payments",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/payments?filters[status]=finished&filters[created_date]=2026-04-01",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"payments"
+					],
+					"query": [
+						{
+							"key": "filters[status]",
+							"value": "finished",
+							"description": "Filter by the payment status"
+						},
+						{
+							"key": "filters[created_date]",
+							"value": "2026-04-01",
+							"description": "Filter payments by their creation date"
+						}
+					]
+				},
+				"description": "List payments."
+			}
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "https://fasterverify.com/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "token",
+			"value": "your_api_token_here",
+			"type": "string"
+		}
+	]
+}

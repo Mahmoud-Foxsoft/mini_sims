@@ -111,14 +111,14 @@ class NowPaymentService
      */
     public function createPayment(float $price_amount, string $pay_currency, User $user): array
     {
-        $fee = (int) config('services.nowPayments.fee', 1.05);
+        // $fee = (int) config('services.nowPayments.fee', 1.05);
         try {
             $response = Http::centralServer()
                 ->retry(3, 200)
                 ->post(config('services.centralServer.payment_url'), [
-                    "amount" => $fee * $price_amount,
+                    "amount" => $price_amount,
                     "currency" => $pay_currency,
-                ])->json();
+                ])->json('data');
             $hasCreated = true;
         } catch (\Throwable $th) {
             Log::error('Error creating payment via NowPayments', [

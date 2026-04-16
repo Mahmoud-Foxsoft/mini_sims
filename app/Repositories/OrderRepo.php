@@ -33,11 +33,11 @@ class OrderRepo implements OrderInterface
     {
         return Order::when(
             $filters['user_id'] ?? null,
-            fn ($query, $user_id) => $query->where('user_id', $user_id)
+            fn($query, $user_id) => $query->where('user_id', $user_id)
         )
             ->when(
                 $filters['with_user'] ?? null,
-                fn ($query) => $query->with('user')
+                fn($query) => $query->with('user')
             )
             ->when(
                 $filters['created_at'] ?? null,
@@ -48,7 +48,7 @@ class OrderRepo implements OrderInterface
             )
             ->when(
                 $filters['status'] ?? null,
-                fn ($query, $status) => $query->where('status', $status)
+                fn($query, $status) => $query->where('status', $status)
             )->latest()->paginate(10);
     }
 
@@ -82,11 +82,11 @@ class OrderRepo implements OrderInterface
 
     public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?int $user_id)
     {
-        return Cache::remember('sum.orders_'.$from?->toDateString().'_'.$to?->toDateString().'_'.$user_id, 3600, function () use ($from, $to) {
+        return Cache::remember('sum.orders_' . $from?->toDateString() . '_' . $to?->toDateString() . '_' . $user_id, 3600, function () use ($from, $to) {
             $totalAmount = DB::table('orders')
                 ->where('status', 'completed')
-                ->when($from, fn ($query) => $query->whereDate('orders.created_at', '>=', $from->toDateString()))
-                ->when($to, fn ($query) => $query->whereDate('orders.created_at', '<=', $to->toDateString()))
+                ->when($from, fn($query) => $query->whereDate('orders.created_at', '>=', $from->toDateString()))
+                ->when($to, fn($query) => $query->whereDate('orders.created_at', '<=', $to->toDateString()))
                 ->selectRaw('SUM(orders.total_cent_price) as total_amount')
                 ->get(['total_amount']);
 
@@ -94,20 +94,38 @@ class OrderRepo implements OrderInterface
         });
     }
 
-    public function createOrderWithTransaction(User $user, array $fulfilledNumbers, int $totalCents, Collection $servicesByCode)
+
+
+    public function createOrderWithTransaction(User $user, array $fulfilledNumbers, int $actualTotalCostCents, int $maxPotentialCost, $servicesByCode)
     {
-        DB::beginTransaction();
-        try {
-            // Create main order
+        return DB::transaction(function () use ($user, $fulfilledNumbers, $actualTotalCostCents, $maxPotentialCost, $servicesByCode) {
+
+            // Lock the user row securely for the final math
+            $lockedUser = User::where('id', $user->id)->lockForUpdate()->first();
+
+            // 1. Silently refund the max amount we reserved earlier in the Facade
+            $lockedUser->increment('balance_cents', $maxPotentialCost);
+
             $order = $this->createNewOrder([
-                'user_id' => $user->id,
-                'total_cent_price' => $totalCents,
+                'user_id' => $lockedUser->id,
+                'total_cent_price' => $actualTotalCostCents,
                 'status' => 'completed',
             ]);
 
-            // Create Order Items
+            // 2. Call your existing createDebit method to charge them the ACTUAL amount.
+            // This will decrement their balance correctly AND create a beautiful, single WalletTransaction log.
+            TransactionFacade::createDebit(
+                $user,
+                $actualTotalCostCents,
+                "Payment for Order #{$order->id}",
+                (string) $order->id
+            );
+
+
+            // 4. Create the Order Items
+            $orderItems = [];
             foreach ($fulfilledNumbers as $item) {
-                OrderItemFacade::create([
+                $orderItems[] = OrderItemFacade::create([
                     'user_id' => $user->id,
                     'order_id' => $order->id,
                     'external_order_id' => $item['phone_data']['request_id'],
@@ -117,24 +135,10 @@ class OrderRepo implements OrderInterface
                 ]);
             }
 
-            // Perform the exact debit using your TransactionFacade
-            TransactionFacade::createDebit(
-                $user,
-                $totalCents,
-                "Payment for Order #{$order->id}",
-                (string) $order->id
-            );
-
-            DB::commit();
-
             return [
-                'order' => $order,
-                'numbers' => OrderItemFacade::all(['order_id' => $order->id])->items(),
+                'order' => clone $order,
+                'numbers' => $orderItems
             ];
-            
-        } catch (Exception $e) {
-            DB::rollBack();
-            throw $e; // Rethrow to let the service handle the external API cancellations
-        }
+        });
     }
 }

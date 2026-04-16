@@ -6,6 +6,7 @@ import { apiRequest } from "@/services/api";
 import { useAuthStore } from "@/stores/authStore";
 import OrderDialog from "@/components/OrderDialog.vue";
 import { useWsStore } from "@/stores/wsStore";
+import { unshiftToRefArray } from "../utils/utils";
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -217,6 +218,15 @@ const copyToClipboard = async (text) => {
         });
     }
 };
+
+const handleSubmit = (data) => {
+    for (let i = 0; i < data.numbers.length; i++) {
+        const element = data.numbers[i];
+        element.messages = [];
+        unshiftToRefArray(phoneNumbers, element,totalRecords, first, rows.value);
+    }
+    authStore.hydrate();
+}
 
 const handleCancel = (event, id) => {
     confirm.require({
@@ -686,9 +696,6 @@ onUnmounted(() => {
 
     <OrderDialog
         v-model:visible="isOrderDialogVisible"
-        @hide="
-            fetchNumbers();
-            authStore.hydrate();
-        "
+        @submit="handleSubmit"
     />
 </template>

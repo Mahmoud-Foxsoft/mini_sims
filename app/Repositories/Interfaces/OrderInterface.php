@@ -14,5 +14,5 @@ interface OrderInterface
     public function getAllOrders(array $filters): LengthAwarePaginator;
     public function createNewOrder(array $data): ?Order;
     public function sumOrdersMonthly(?Carbon $from, ?Carbon $to, ?int $user_id);
-    public function createOrderWithTransaction(User $user, array $fulfilledNumbers, int $totalCents, Collection $servicesByCode);
+    public function createOrderWithTransaction(User $user, array $fulfilledNumbers, int $actualTotalCostCents, int $maxPotentialCost, Collection $servicesByCode);
 }

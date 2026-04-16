@@ -87,8 +87,8 @@ onMounted(fetchTotals);
             </Card>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <Card class="lg:col-span-2 shadow-sm">
+        <div class="grid grid-cols-1 gap-4">
+            <Card class=" shadow-sm">
                 <template #title>Next steps</template>
                 <template #content>
                     <div class="grid gap-3">
@@ -158,6 +158,22 @@ onMounted(fetchTotals);
                                 size="small"
                                 severity="secondary"
                                 @click="router.push('/orders')"
+                            />
+                        </div>
+                        <div
+                            class="flex items-center justify-between p-3 rounded-lg border border-gray-200 dark:border-gray-700"
+                        >
+                            <div>
+                                <p class="font-medium">Review Profile</p>
+                                <p class="text-sm text-gray-500">
+                                    Update your profile details and Weebhook to receive messages.
+                                </p>
+                            </div>
+                            <Button
+                                label="View"
+                                size="small"
+                                severity="secondary"
+                                @click="router.push('/profile')"
                             />
                         </div>
                     </div>

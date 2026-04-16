@@ -164,7 +164,7 @@ watch([amount, currency], () => {
 </script>
 
 <template>
-    <Dialog v-model:visible="dialogVisible" :dismissableMask="true" modal header="Create payment" :style="{ width: '32rem' }">
+    <Dialog v-model:visible="dialogVisible" modal header="Create payment" :style="{ width: '32rem' }">
         <div class="flex flex-col gap-4">
             <div class="flex flex-col gap-2">
                 <label for="payment-amount" class="font-medium">Amount</label>

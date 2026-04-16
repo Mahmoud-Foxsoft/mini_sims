@@ -78,7 +78,8 @@ class OrderItemRepo implements OrderItemInterface
             TransactionFacade::createDebit(
                 $orderItem->user,
                 $data['price_cents'],
-                "Payment for reused phone number #{$orderItem->phone_number} in order #{$orderItem->order_id}"
+                "Payment for reused phone number #{$orderItem->phone_number}",
+                $orderItem->order_id
             );
             
             CacheCounterAction::execute('pending_numbers_' . $orderItem->user_id, 1, 'increment');
@@ -121,7 +122,8 @@ class OrderItemRepo implements OrderItemInterface
             TransactionFacade::createCredit(
                 $orderItem->user,
                 $orderItem->price_cents,
-                "Refund for cancelled phone number #{$orderItem->phone_number} in order #{$orderItem->order_id}"
+                "Refund for cancelled phone number #{$orderItem->phone_number}",
+                $orderItem->order_id
             );
 
             CacheCounterAction::execute('pending_numbers_' . $orderItem->user_id, 1, 'decrement');
