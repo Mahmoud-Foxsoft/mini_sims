@@ -16,7 +16,6 @@ class TransactionController extends Controller
     public function index(Request $request)
     {
         $filters = $request->input('filters', []);
-        $filters['per_page'] = $request->input('per_page', 20);
         $filters['user_id'] = $request->user()->id;
 
         $transactions = TransactionFacade::getPaginated(

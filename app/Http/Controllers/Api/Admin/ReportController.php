@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\DTOs\TotalObject;
 use App\Repositories\Facades\OrderFacade;
+use App\Repositories\Facades\OrderItemFacade;
 use App\Repositories\Facades\PaymentFacade;
 use App\Repositories\Facades\UserFacade;
 use Carbon\Carbon;
@@ -23,14 +24,18 @@ class ReportController extends Controller
         $filters = (array) $request->input('filters');
         $from = Carbon::parse($filters['from']);
         $to = Carbon::parse($filters['to']);
-        $orderTotals = OrderFacade::sumOrdersMonthly($from, $to, null, null) / 1000;
+        $orderTotals = OrderFacade::sumOrdersMonthly($from, $to, null) / 1000;
         $totalPayments = PaymentFacade::sumAmountWithUserCount($from, $to)->first();
         $totalUsers = UserFacade::sumTotalUsersMonthly($from, $to) . '';
+        $phones = OrderItemFacade::sumPhonesMonthly(now()->startOfMonth(), now()->endOfMonth());
         $totals = [
             new TotalObject('New User this Period', $totalUsers, 'users'),
             new TotalObject('Total Payments For Period', $totalPayments['total_amount'] ?? 0, 'payments'),
             new TotalObject('Total Users Who Made Payments', $totalPayments['user_count'], 'payments'),
             new TotalObject('Total Orders Income For Period', $orderTotals . ' USD', 'orders'),
+            new TotalObject('Total Completed Phones For Period', (string) $phones['completed_count'], 'phone-numbers'),
+            new TotalObject('Total Refunded Phones For Period', (string) $phones['refunded_count'], 'phone-numbers'),
+            new TotalObject('Total Cancelled Phones For Period', (string) $phones['cancelled_count'], 'phone-numbers'),
         ];
         return $this->sendResponse(['totals' => $totals], 'Admin Report fetched successfully');
     }

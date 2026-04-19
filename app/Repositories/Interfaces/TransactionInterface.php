@@ -6,7 +6,7 @@ use App\Models\WalletTransaction;
 
 interface TransactionInterface
 {
-    public function getPaginated(array $filters = [], int $perPage = 20): array;
+    public function getPaginated(array $filters = []): array;
 
     public function findById(int $id): ?WalletTransaction;
 

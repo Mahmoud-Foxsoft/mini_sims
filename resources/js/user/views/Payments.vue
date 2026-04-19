@@ -1,9 +1,9 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import { useToast } from "primevue/usetoast";
-import { apiRequest } from "@/services/api";
-import { formatDate } from "@/services/date";
-import { usePaymentDialogStore } from "@/stores/paymentDialogStore";
+import { apiRequest } from "@/user/services/api";
+import { formatDate } from "@/user/services/date";
+import { usePaymentDialogStore } from "@/user/stores/paymentDialogStore";
 
 const toast = useToast();
 const loading = ref(false);
@@ -208,7 +208,18 @@ watch(
                     />
                     <Column header="Created" style="min-width: 12rem">
                         <template #body="slotProps">
-                            {{ formatDate(slotProps.data.created_at) }}
+                            {{
+                                new Intl.DateTimeFormat("en-CA", {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                })
+                                    .format(new Date(slotProps.data.created_at))
+                                    .replace(", ", " ")
+                            }}
                         </template>
                     </Column>
                     <template #empty>

@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useToast } from "primevue/usetoast";
-import { apiRequest } from "@/services/api";
-import { formatDate } from "@/services/date";
+import { apiRequest } from "@/user/services/api";
+import { formatDate } from "@/user/services/date";
 
 const toast = useToast();
 const loading = ref(false);
@@ -106,49 +106,120 @@ onMounted(() => fetchOrders());
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Status</label>
-                            <Dropdown v-model="statusFilter" :options="statusOptions" optionLabel="label"
-                                optionValue="value" placeholder="All statuses" class="w-full" />
+                            <Dropdown
+                                v-model="statusFilter"
+                                :options="statusOptions"
+                                optionLabel="label"
+                                optionValue="value"
+                                placeholder="All statuses"
+                                class="w-full"
+                            />
                         </div>
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Created date</label>
-                            <Calendar v-model="createdDateFilter" dateFormat="yy-mm-dd" showIcon class="w-full"
-                                inputClass="w-full" placeholder="YYYY-MM-DD" />
+                            <Calendar
+                                v-model="createdDateFilter"
+                                dateFormat="yy-mm-dd"
+                                showIcon
+                                class="w-full"
+                                inputClass="w-full"
+                                placeholder="YYYY-MM-DD"
+                            />
                         </div>
                         <div class="flex items-end gap-2">
-                            <Button label="Apply" icon="pi pi-filter" @click="applyFilters" />
-                            <Button label="Clear" icon="pi pi-times" severity="secondary" @click="clearFilters" />
+                            <Button
+                                label="Apply"
+                                icon="pi pi-filter"
+                                @click="applyFilters"
+                            />
+                            <Button
+                                label="Clear"
+                                icon="pi pi-times"
+                                severity="secondary"
+                                @click="clearFilters"
+                            />
                         </div>
                     </div>
                 </div>
-                <DataTable lazy :value="orders" :loading="loading" :paginator="true" :rows="rows"
-                    :totalRecords="totalRecords" :first="first" @page="onPage">
-                    <Column field="id" header="Order ID" style="min-width: 12rem" />
-                    <Column field="total_cent_price" header="Total Price" style="min-width: 10rem">
+                <DataTable
+                    lazy
+                    :value="orders"
+                    :loading="loading"
+                    :paginator="true"
+                    :rows="rows"
+                    :totalRecords="totalRecords"
+                    :first="first"
+                    @page="onPage"
+                >
+                    <Column
+                        field="id"
+                        header="Order ID"
+                        style="min-width: 12rem"
+                    />
+                    <Column
+                        field="total_cent_price"
+                        header="Total Price"
+                        style="min-width: 10rem"
+                    >
                         <template #body="slotProps">
-                            $ {{ (slotProps.data.total_cent_price / 100).toFixed(2) }}
+                            $
+                            {{
+                                (slotProps.data.total_cent_price / 100).toFixed(
+                                    2,
+                                )
+                            }}
                         </template>
                     </Column>
-                    <Column field="status" header="Status" style="min-width: 10rem">
+                    <Column
+                        field="status"
+                        header="Status"
+                        style="min-width: 10rem"
+                    >
                         <template #body="slotProps">
-                            <Tag :value="slotProps.data.status" :severity="statusSeverity(slotProps.data.status)
-                                " />
+                            <Tag
+                                :value="slotProps.data.status"
+                                :severity="
+                                    statusSeverity(slotProps.data.status)
+                                "
+                            />
                         </template>
                     </Column>
                     <Column header="Created" style="min-width: 12rem">
                         <template #body="slotProps">
-                            {{ formatDate(slotProps.data.created_at) }}
+                            {{
+                                new Intl.DateTimeFormat("en-CA", {
+                                    year: "numeric",
+                                    month: "2-digit",
+                                    day: "2-digit",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: true,
+                                })
+                                    .format(new Date(slotProps.data.created_at))
+                                    .replace(", ", " ")
+                            }}
                         </template>
                     </Column>
                     <template #empty>
-                        <div v-if="!loading" class="flex flex-col items-center justify-center p-8 text-gray-500">
-                            <i class="pi pi-inbox text-4xl mb-4 text-gray-400"></i>
+                        <div
+                            v-if="!loading"
+                            class="flex flex-col items-center justify-center p-8 text-gray-500"
+                        >
+                            <i
+                                class="pi pi-inbox text-4xl mb-4 text-gray-400"
+                            ></i>
                             <p class="text-lg font-medium">No Orders found.</p>
                             <p class="text-sm">
                                 Try adjusting your filters or check back later.
                             </p>
                         </div>
-                        <div v-else class="flex flex-col items-center justify-center p-8 text-gray-500">
-                            <i class="pi pi-spinner pi-spin text-4xl mb-4 text-blue-500 dark:text-blue-400"></i>
+                        <div
+                            v-else
+                            class="flex flex-col items-center justify-center p-8 text-gray-500"
+                        >
+                            <i
+                                class="pi pi-spinner pi-spin text-4xl mb-4 text-blue-500 dark:text-blue-400"
+                            ></i>
                             <p class="text-lg font-medium">Loading orders...</p>
                             <p class="text-sm">
                                 Please wait while we fetch your data.

@@ -1,30 +1,38 @@
 <script setup>
-import { computed } from 'vue';
-import { useLayout } from '@/layout/composables/layout';
+import { computed } from "vue";
+import { useLayout } from "@/user/layout/composables/layout";
 
-defineOptions({ name: 'AppMenuItem' });
+defineOptions({ name: "AppMenuItem" });
 
 const { layoutState, isDesktop } = useLayout();
 
 const props = defineProps({
     item: {
         type: Object,
-        default: () => ({})
+        default: () => ({}),
     },
     root: {
         type: Boolean,
-        default: true
+        default: true,
     },
     parentPath: {
         type: String,
-        default: null
-    }
+        default: null,
+    },
 });
 
-const fullPath = computed(() => (props.item.path ? (props.parentPath ? props.parentPath + props.item.path : props.item.path) : null));
+const fullPath = computed(() =>
+    props.item.path
+        ? props.parentPath
+            ? props.parentPath + props.item.path
+            : props.item.path
+        : null,
+);
 
 const isActive = computed(() => {
-    return props.item.path ? layoutState.activePath?.startsWith(fullPath.value) : layoutState.activePath === props.item.to;
+    return props.item.path
+        ? layoutState.activePath?.startsWith(fullPath.value)
+        : layoutState.activePath === props.item.to;
 });
 
 const itemClick = (event, item) => {
@@ -39,7 +47,10 @@ const itemClick = (event, item) => {
 
     if (item.items) {
         if (isActive.value) {
-            layoutState.activePath = layoutState.activePath.replace(item.path, '');
+            layoutState.activePath = layoutState.activePath.replace(
+                item.path,
+                "",
+            );
         } else {
             layoutState.activePath = fullPath.value;
             layoutState.menuHoverActive = true;
@@ -52,7 +63,12 @@ const itemClick = (event, item) => {
 };
 
 const onMouseEnter = () => {
-    if (isDesktop() && props.root && props.item.items && layoutState.menuHoverActive) {
+    if (
+        isDesktop() &&
+        props.root &&
+        props.item.items &&
+        layoutState.menuHoverActive
+    ) {
         layoutState.activePath = fullPath.value;
     }
 };
@@ -60,14 +76,36 @@ const onMouseEnter = () => {
 
 <template>
     <li :class="{ 'layout-root-menuitem': root, 'active-menuitem': isActive }">
-        <div v-if="root && item.visible !== false" class="layout-menuitem-root-text">{{ item.label }}</div>
-        <router-link v-if="item.to && !item.items && item.visible !== false" @click="itemClick($event, item)" exactActiveClass="active-route" :class="item.class" tabindex="0" :to="item.to" @mouseenter="onMouseEnter">
+        <div
+            v-if="root && item.visible !== false"
+            class="layout-menuitem-root-text"
+        >
+            {{ item.label }}
+        </div>
+        <router-link
+            v-if="item.to && !item.items && item.visible !== false"
+            @click="itemClick($event, item)"
+            exactActiveClass="active-route"
+            :class="item.class"
+            tabindex="0"
+            :to="item.to"
+            @mouseenter="onMouseEnter"
+        >
             <i :class="item.icon" class="layout-menuitem-icon" />
             <span class="layout-menuitem-text">{{ item.label }}</span>
         </router-link>
-        <Transition v-if="item.items && item.visible !== false" name="layout-submenu">
+        <Transition
+            v-if="item.items && item.visible !== false"
+            name="layout-submenu"
+        >
             <ul v-show="root ? true : isActive" class="layout-submenu">
-                <AppMenuItem v-for="child in item.items" :key="child.label + '_' + (child.to || child.path)" :item="child" :root="false" :parentPath="fullPath" />
+                <AppMenuItem
+                    v-for="child in item.items"
+                    :key="child.label + '_' + (child.to || child.path)"
+                    :item="child"
+                    :root="false"
+                    :parentPath="fullPath"
+                />
             </ul>
         </Transition>
     </li>

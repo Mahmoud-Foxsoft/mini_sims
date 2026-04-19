@@ -33,7 +33,6 @@ Route::group(['middleware' => ['auth:api', 'scopes:user-api']], function () {
     Route::post('payments', [PaymentController::class, 'store']);
     Route::get('payments/currencies', [NowPaymentController::class, 'getCurrencies']);
     Route::post('payments/estimate', [NowPaymentController::class, 'estimate']);
-    Route::delete('phone-numbers/delete', [OrderItemsController::class, 'bulkDelete']);
 });
 
 Route::prefix('v1')->group(function () {

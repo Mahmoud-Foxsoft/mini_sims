@@ -1,8 +1,8 @@
 <script setup>
-import { onBeforeUnmount, ref, watch } from 'vue';
-import { useRoute } from 'vue-router';
-import { useLayout } from '@/layout/composables/layout';
-import AppMenu from './AppMenu.vue';
+import { onBeforeUnmount, ref, watch } from "vue";
+import { useRoute } from "vue-router";
+import { useLayout } from "@/user/layout/composables/layout";
+import AppMenu from "./AppMenu.vue";
 
 const { layoutState, isDesktop, hasOpenOverlay } = useLayout();
 const route = useRoute();
@@ -19,7 +19,7 @@ watch(
         layoutState.mobileMenuActive = false;
         layoutState.menuHoverActive = false;
     },
-    { immediate: true }
+    { immediate: true },
 );
 
 watch(hasOpenOverlay, (newVal) => {
@@ -37,19 +37,19 @@ const bindOutsideClickListener = () => {
             }
         };
 
-        document.addEventListener('click', outsideClickListener);
+        document.addEventListener("click", outsideClickListener);
     }
 };
 
 const unbindOutsideClickListener = () => {
     if (outsideClickListener) {
-        document.removeEventListener('click', outsideClickListener);
+        document.removeEventListener("click", outsideClickListener);
         outsideClickListener = null;
     }
 };
 
 const isOutsideClicked = (event) => {
-    const topbarButtonEl = document.querySelector('.layout-menu-button');
+    const topbarButtonEl = document.querySelector(".layout-menu-button");
 
     return !(
         sidebarRef.value.isSameNode(event.target) ||

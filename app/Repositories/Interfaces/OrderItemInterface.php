@@ -3,6 +3,7 @@
 namespace App\Repositories\Interfaces;
 
 use App\Models\OrderItem;
+use Carbon\Carbon;
 
 interface OrderItemInterface
 {
@@ -13,4 +14,5 @@ interface OrderItemInterface
     public function delete(OrderItem $orderItem);
     public function cancel(OrderItem $orderItem);
     public function countPendingNumbers(int $user_id);
+    public function sumPhonesMonthly(?Carbon $from, ?Carbon $to, ?int $user_id);
 }

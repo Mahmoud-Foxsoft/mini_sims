@@ -132,6 +132,7 @@ class OrderRepo implements OrderInterface
                     'service_name' => $servicesByCode->get($item['service_code'])['name'],
                     'phone_number' => $item['phone_data']['number'],
                     'price_cents' => $item['price'],
+                    'status' => 'pending',
                 ]);
             }
 

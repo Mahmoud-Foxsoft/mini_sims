@@ -16,11 +16,11 @@ class AuthController extends Controller
 {
     public function register(UserRegisterRequest $request)
     {
-        // $recaptchaService = new RecaptchaService();
-        // $isValid = $recaptchaService->checkToken($request->validated('recaptcha_token'), 'user_register');
-        // if (!$isValid) {
-        //     return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
-        // }
+        $recaptchaService = new RecaptchaService();
+        $isValid = $recaptchaService->checkToken($request->validated('recaptcha_token'), 'user_register');
+        if (!$isValid) {
+            return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
+        }
         $user = UserAuthFacade::register($request->validated());
         if (! $user) {
             return $this->sendError('Registration failed', ['error' => 'Unable to register user'], 500);
@@ -31,11 +31,11 @@ class AuthController extends Controller
 
     public function login(UserLoginRequest $request)
     {
-        // $recaptchaService = new RecaptchaService();
-        // $isValid = $recaptchaService->checkToken($request->validated('recaptcha_token'), 'user_login');
-        // if (!$isValid) {
-        //     return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
-        // }
+        $recaptchaService = new RecaptchaService();
+        $isValid = $recaptchaService->checkToken($request->validated('recaptcha_token'), 'user_login');
+        if (!$isValid) {
+            return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
+        }
         $result = UserAuthFacade::login(
             $request->validated('email'),
             $request->validated('password')
@@ -81,11 +81,11 @@ class AuthController extends Controller
 
     public function forgotPassword(ForgotPasswordRequest $request)
     {
-        // $recaptchaService = new RecaptchaService();
-        // $isValid = $recaptchaService->checkToken($request->validated('recaptcha_token'), 'forgot_password');
-        // if (!$isValid) {
-        //     return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
-        // }
+        $recaptchaService = new RecaptchaService();
+        $isValid = $recaptchaService->checkToken($request->validated('recaptcha_token'), 'forgot_password');
+        if (!$isValid) {
+            return response()->json(['error' => 'reCAPTCHA verification failed'], 422);
+        }
         $result = UserAuthFacade::forgotPassword($request->validated('email'));
         if (is_array($result) && isset($result['error'])) {
             return $this->sendError('Too many requests', ['error' => $result['error']], 429);

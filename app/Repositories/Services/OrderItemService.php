@@ -4,6 +4,7 @@ namespace App\Repositories\Services;
 
 use App\Models\OrderItem;
 use App\Repositories\Interfaces\OrderItemInterface;
+use Carbon\Carbon;
 
 class OrderItemService
 {
@@ -38,5 +39,9 @@ class OrderItemService
 
     public function countPendingNumbers(int $user_id) {
         return $this->repo->countPendingNumbers($user_id);
+    }
+
+    public function sumPhonesMonthly(?Carbon $from, ?Carbon $to, ?int $user_id) {
+        return $this->repo->sumPhonesMonthly($from, $to, $user_id);
     }
 }

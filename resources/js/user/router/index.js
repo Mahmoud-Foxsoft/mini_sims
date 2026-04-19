@@ -1,89 +1,89 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import { useAuthStore } from '@/stores/authStore';
-import AppLayout from '@/layout/AppLayout.vue';
+import { createRouter, createWebHistory } from "vue-router";
+import { useAuthStore } from "@/user/stores/authStore";
+import AppLayout from "@/user/layout/AppLayout.vue";
 
 const router = createRouter({
-    history: createWebHistory('/dashboard/'),
+    history: createWebHistory("/dashboard/"),
     routes: [
         {
-            path: '/',
+            path: "/",
             component: AppLayout,
             children: [
                 {
-                    path: '',
-                    name: 'dashboard',
+                    path: "",
+                    name: "dashboard",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/Dashboard.vue')
+                    component: () => import("@/user/views/Dashboard.vue"),
                 },
                 {
-                    path: 'orders',
-                    name: 'orders',
+                    path: "orders",
+                    name: "orders",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/Orders.vue')
+                    component: () => import("@/user/views/Orders.vue"),
                 },
                 {
-                    path: 'phone-numbers',
-                    name: 'phoneNumbers',
+                    path: "phone-numbers",
+                    name: "phoneNumbers",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/PhoneNumbers.vue')
+                    component: () => import("@/user/views/PhoneNumbers.vue"),
                 },
                 {
-                    path: 'transactions',
-                    name: 'transactions',
+                    path: "transactions",
+                    name: "transactions",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/Transactions.vue')
+                    component: () => import("@/user/views/Transactions.vue"),
                 },
                 {
-                    path: 'payments',
-                    name: 'payments',
+                    path: "payments",
+                    name: "payments",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/Payments.vue')
+                    component: () => import("@/user/views/Payments.vue"),
                 },
                 {
-                    path: 'services',
-                    name: 'services',
+                    path: "services",
+                    name: "services",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/Services.vue')
+                    component: () => import("@/user/views/Services.vue"),
                 },
                 {
-                    path: 'profile',
-                    name: 'profile',
+                    path: "profile",
+                    name: "profile",
                     meta: { requiresAuth: true },
-                    component: () => import('@/views/Profile.vue')
-                }
-            ]
+                    component: () => import("@/user/views/Profile.vue"),
+                },
+            ],
         },
         {
-            path: '/auth/login',
-            name: 'login',
+            path: "/auth/login",
+            name: "login",
             meta: { guestOnly: true },
-            component: () => import('@/views/auth/Login.vue')
+            component: () => import("@/user/views/auth/Login.vue"),
         },
         {
-            path: '/auth/register',
-            name: 'register',
+            path: "/auth/register",
+            name: "register",
             meta: { guestOnly: true },
-            component: () => import('@/views/auth/Register.vue')
+            component: () => import("@/user/views/auth/Register.vue"),
         },
         {
-            path: '/auth/forgot-password',
-            name: 'forgotPassword',
+            path: "/auth/forgot-password",
+            name: "forgotPassword",
             meta: { guestOnly: true },
-            component: () => import('@/views/auth/ForgotPassword.vue')
+            component: () => import("@/user/views/auth/ForgotPassword.vue"),
         },
         {
-            path: '/auth/reset-password',
-            name: 'resetPassword',
+            path: "/auth/reset-password",
+            name: "resetPassword",
             meta: { guestOnly: true },
-            component: () => import('@/views/auth/ResetPassword.vue')
+            component: () => import("@/user/views/auth/ResetPassword.vue"),
         },
         {
-            path: '/auth/verify-email',
-            name: 'verifyEmail',
+            path: "/auth/verify-email",
+            name: "verifyEmail",
             meta: { guestOnly: true },
-            component: () => import('@/views/auth/VerifyEmail.vue')
-        }
-    ]
+            component: () => import("@/user/views/auth/VerifyEmail.vue"),
+        },
+    ],
 });
 
 router.beforeEach((to) => {
@@ -91,11 +91,11 @@ router.beforeEach((to) => {
     const isAuthenticated = authStore.isAuthenticated;
 
     if (to.meta.requiresAuth && !isAuthenticated) {
-        return { name: 'login', query: { redirect: to.fullPath } };
+        return { name: "login", query: { redirect: to.fullPath } };
     }
 
     if (to.meta.guestOnly && isAuthenticated) {
-        return { name: 'dashboard' };
+        return { name: "dashboard" };
     }
 
     return true;

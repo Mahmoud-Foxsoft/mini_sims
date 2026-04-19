@@ -11,9 +11,9 @@ class TransactionService
     {
     }
 
-    public function getPaginated(array $filters = [], int $perPage = 20)
+    public function getPaginated(array $filters = [])
     {
-        return $this->repo->getPaginated($filters, $perPage);
+        return $this->repo->getPaginated($filters);
     }
 
     public function createCredit(

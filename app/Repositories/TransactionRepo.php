@@ -10,7 +10,7 @@ class TransactionRepo implements TransactionInterface
 {
     public function __construct(protected WalletTransaction $model) {}
 
-    public function getPaginated(array $filters = [], int $perPage = 20): array
+    public function getPaginated(array $filters = []): array
     {
         $query = $this->model
             ->when(isset($filters['with_user']) && $filters['with_user'] !== null && $filters['with_user'] !== '', function ($query) {
@@ -38,7 +38,7 @@ class TransactionRepo implements TransactionInterface
 
         $paginator = $query
             ->orderBy('created_at', 'desc')
-            ->paginate($perPage);
+            ->paginate($filters['per_page'] ?? 20);
 
         $result['transactions'] = $paginator;
         $result['credit_sum_cents'] = $sums['credit_sum_cents'];

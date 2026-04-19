@@ -31,8 +31,8 @@ class OrderItem extends Model
         return $this->hasMany(PhoneMessage::class)->latest();
     }
 
-    public function prunable(): Builder
-    {
-        return static::where('created_at', '<=', now()->subDays(30));
-    }
+    // public function prunable(): Builder
+    // {
+    //     return static::where('created_at', '<=', now()->subDays(30));
+    // }
 }

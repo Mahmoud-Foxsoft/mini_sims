@@ -1,9 +1,9 @@
 <script setup>
 import { ref, computed, watch } from "vue";
 import { useToast } from "primevue/usetoast";
-import { apiRequest } from "@/services/api";
-import { useAuthStore } from "@/stores/authStore";
-import { useWsStore } from "@/stores/wsStore";
+import { apiRequest } from "@/user/services/api";
+import { useAuthStore } from "@/user/stores/authStore";
+import { useWsStore } from "@/user/stores/wsStore";
 
 
 const visible = defineModel("visible", { type: Boolean, default: false });

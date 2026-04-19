@@ -6,6 +6,7 @@ use App\Actions\CacheCounterAction;
 use App\Models\OrderItem;
 use App\Repositories\Facades\TransactionFacade;
 use App\Repositories\Interfaces\OrderItemInterface;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -69,11 +70,16 @@ class OrderItemRepo implements OrderItemInterface
     {
         DB::beginTransaction();
         try {
-            $orderItem->update([
+            $newOrderItem = OrderItem::create(array_merge($orderItem->toArray(), [
                 'status' => 'pending',
                 'external_order_id' => $data['external_order_id'],
                 'price_cents' => $data['price_cents']
-            ]);
+            ]));
+            // $orderItem->update([
+            //     'status' => 'pending',
+            //     'external_order_id' => $data['external_order_id'],
+            //     'price_cents' => $data['price_cents']
+            // ]);
 
             TransactionFacade::createDebit(
                 $orderItem->user,
@@ -81,7 +87,7 @@ class OrderItemRepo implements OrderItemInterface
                 "Payment for reused phone number #{$orderItem->phone_number}",
                 $orderItem->order_id
             );
-            
+
             CacheCounterAction::execute('pending_numbers_' . $orderItem->user_id, 1, 'increment');
 
             DB::commit();
@@ -146,6 +152,36 @@ class OrderItemRepo implements OrderItemInterface
     {
         return Cache::remember('pending_numbers_' . $user_id, 60 * 60, function () use ($user_id) {
             return OrderItem::where('user_id', $user_id)->where('status', 'pending')->count();
+        });
+    }
+
+
+    public function sumPhonesMonthly(?Carbon $from, ?Carbon $to, ?int $user_id)
+    {
+        $fromStr = $from ? $from->toDateString() : 'null';
+        $toStr   = $to ? $to->toDateString() : 'null';
+        $userStr = $user_id ?? 'null';
+        $cacheKey = "sum.phones_{$fromStr}_{$toStr}_{$userStr}";
+
+        return Cache::remember($cacheKey, 3600, function () use ($from, $to, $user_id) {
+            $stats = DB::table('order_items')
+                ->when($from, fn($query) => $query->whereDate('created_at', '>=', $from->toDateString()))
+                ->when($to, fn($query) => $query->whereDate('created_at', '<=', $to->toDateString()))
+                ->when($user_id, fn($query) => $query->where('user_id', $user_id))
+                ->selectRaw("
+                SUM(price_cents) as total_amount,
+                SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_count,
+                SUM(CASE WHEN status = 'timeout_refunded' THEN 1 ELSE 0 END) as refunded_count,
+                SUM(CASE WHEN status = 'cancelled' THEN 1 ELSE 0 END) as cancelled_count
+            ")
+                ->first();
+
+            return [
+                'total_amount'     => (int) ($stats->total_amount ?? 0),
+                'completed_count'  => (int) ($stats->completed_count ?? 0),
+                'refunded_count'   => (int) ($stats->refunded_count ?? 0),
+                'cancelled_count'  => (int) ($stats->cancelled_count ?? 0),
+            ];
         });
     }
 }
