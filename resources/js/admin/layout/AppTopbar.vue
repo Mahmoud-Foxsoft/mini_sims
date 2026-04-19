@@ -1,8 +1,8 @@
 <script setup>
 import { computed, ref } from "vue";
 import { useRouter } from "vue-router";
-import { useLayout } from "@/user/user/layout/composables/layout";
-import { useAuthStore } from "@/user/user/stores/authStore";
+import { useLayout } from "@/admin/layout/composables/layout";
+import { useAuthStore } from "@/admin/stores/authStore";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -75,6 +75,23 @@ const toggleUserMenu = (event) => {
 
                 <span>Faster Verify</span>
             </router-link>
+        </div>
+           <div class="layout-topbar-actions">
+            <button
+                type="button"
+                class="layout-topbar-action"
+                @click="toggleDarkMode"
+            >
+                <i :class="['pi', isDarkTheme ? 'pi-moon' : 'pi-sun']" />
+            </button>
+            <button
+                type="button"
+                class="layout-topbar-action"
+                @click="toggleUserMenu"
+            >
+                <i class="pi pi-user" />
+            </button>
+            <Menu ref="menu" :model="menuItems" popup />
         </div>
     </div>
 </template>

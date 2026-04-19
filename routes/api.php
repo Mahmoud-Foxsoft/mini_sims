@@ -19,9 +19,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('admin')->group(function () {
     Route::post('login', [AuthController::class, 'login']);
-    Route::group(["middleware" => ['auth:admin', 'scope:admin-api']], function () {
+    Route::group(["middleware" => ['auth:admin', 'scopes:admin-api']], function () {
         Route::post('logout', [AuthController::class, 'logout']);
-        Route::get('profile', [AuthController::class, 'getProfile']);
+        Route::get('me', [AuthController::class, 'getProfile']);
         Route::post('refresh-token', [AuthController::class, 'refreshToken']);
         // Admin management
         Route::apiResource('admins', AdminController::class)->except(['show']);
@@ -45,6 +45,7 @@ Route::prefix('admin')->group(function () {
         Route::delete('phone-numbers/delete', [OrderItemsController::class, 'bulkDelete']);
         
         Route::get('transactions', [TransactionController::class, 'index']);
+        Route::post('transactions', [TransactionController::class, 'store']);
 
         Route::delete('contact-messages/deleteAll', [ContactController::class, 'deleteAllMessages']);
         Route::apiResource('contact-messages', ContactController::class)->except(['update', 'store']);

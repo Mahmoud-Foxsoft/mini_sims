@@ -1,14 +1,8 @@
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref } from "vue";
 import { useRouter, useRoute } from "vue-router";
 import { useToast } from "primevue/usetoast";
-import { useAuthStore } from "@/user/stores/authStore";
-import {
-    getRecaptchaToken,
-    renderRecaptcha,
-    resetRecaptcha,
-    clearRecaptcha,
-} from "@/user/services/recaptcha";
+import { useAuthStore } from "@/admin/stores/authStore";
 
 const router = useRouter();
 const route = useRoute();
@@ -21,46 +15,21 @@ const loading = ref(false);
 const formErrors = ref({});
 const formMessage = ref("");
 
-onMounted(() => {
-    renderRecaptcha("recaptcha-container");
-});
-
-onUnmounted(() => {
-    clearRecaptcha();
-});
-
 const submit = async () => {
     loading.value = true;
     formErrors.value = {};
     formMessage.value = "";
-
-    const recaptchaToken = getRecaptchaToken();
-
-    if (!recaptchaToken) {
-        formMessage.value = "Please complete the reCAPTCHA to continue.";
-        loading.value = false;
-        return;
-    }
-
     try {
         await authStore.login({
             email: email.value,
             password: password.value,
-            recaptcha_token: recaptchaToken,
         });
         const redirect = route.query.redirect || "/";
         router.push(redirect);
     } catch (error) {
         console.log(error);
 
-        resetRecaptcha();
-
         const details = error.details || {};
-        if (details.error && details.error.includes("Email not verified")) {
-            localStorage.setItem("pending_email", email.value);
-            router.push({ name: "verifyEmail" });
-            return;
-        }
         formMessage.value = error.message;
         if (details.errors) {
             formErrors.value = details.errors;
@@ -188,25 +157,6 @@ const submit = async () => {
                             class="text-red-500 block -mt-2 mb-6"
                             >{{ formErrors.password[0] }}</small
                         >
-
-                        <div class="flex justify-center mb-6">
-                            <div id="recaptcha-container"></div>
-                        </div>
-
-                        <div
-                            class="flex items-center justify-between mt-2 mb-8 gap-8"
-                        >
-                            <router-link
-                                to="/auth/forgot-password"
-                                class="font-medium no-underline text-primary"
-                                >Forgot password?</router-link
-                            >
-                            <router-link
-                                to="/auth/register"
-                                class="font-medium no-underline text-primary"
-                                >Create account</router-link
-                            >
-                        </div>
 
                         <Button
                             label="Sign In"

@@ -1,8 +1,8 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useToast } from "primevue/usetoast";
-import { apiRequest } from "@/user/services/api";
-import { formatDate } from "@/user/services/date";
+import { apiRequest } from "@/admin/services/api";
+import UserSelect from "@/admin/components/UserSelect.vue";
 
 const toast = useToast();
 const loading = ref(false);
@@ -12,6 +12,7 @@ const first = ref(0);
 const rows = ref(20);
 const creditSum = ref(0);
 const debitSum = ref(0);
+const userFilter = ref(null);
 
 const typeFilter = ref(null);
 const referenceFilter = ref("");
@@ -25,6 +26,9 @@ const buildQuery = (page) => {
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("per_page", String(rows.value));
+    if (userFilter.value) {
+        params.set("filters[user_id]", userFilter.value);
+    }
     if (typeFilter.value) {
         params.set("filters[type]", typeFilter.value);
     }
@@ -38,7 +42,7 @@ const fetchTransactions = async (page = 1) => {
     loading.value = true;
     try {
         const query = buildQuery(page);
-        const data = await apiRequest(`/v1/transactions?${query}`);
+        const data = await apiRequest(`/transactions?${query}`);
         creditSum.value = data.credit_sum_cents || 0;
         debitSum.value = data.debit_sum_cents || 0;
         const paginator = data.transactions || {};
@@ -110,6 +114,13 @@ onMounted(() => fetchTransactions());
                 <div class="flex flex-col gap-3 mb-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div class="flex flex-col gap-2">
+                            <label class="font-medium">User</label>
+                            <UserSelect
+                                v-model="userFilter"
+                                placeholder="Search a user..."
+                            />
+                        </div>
+                        <div class="flex flex-col gap-2">
                             <label class="font-medium">Type</label>
                             <Dropdown
                                 v-model="typeFilter"
@@ -170,6 +181,13 @@ onMounted(() => fetchTransactions());
                         <template #body="slotProps">
                             $
                             {{ (slotProps.data.amount_cents / 100).toFixed(2) }}
+                        </template>
+                    </Column>
+                    <Column field="user" header="User" style="min-width: 12rem">
+                        <template #body="slotProps">
+                            {{ slotProps.data.user.name }} ({{
+                                slotProps.data.user.email
+                            }})
                         </template>
                     </Column>
                     <Column

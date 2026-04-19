@@ -21,6 +21,9 @@ class OrderItemRepo implements OrderItemInterface
         )->when(
             $filters['with_messages'] ?? null,
             fn($query) => $query->with('messages')
+        )->when(
+            $filters['with_user'] ?? null,
+            fn($query) => $query->with('user')
         )
             ->when(
                 $filters['service_name'] ?? null,

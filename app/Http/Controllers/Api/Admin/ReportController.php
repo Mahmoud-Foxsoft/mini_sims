@@ -22,16 +22,20 @@ class ReportController extends Controller
     public function __invoke(Request $request)
     {
         $filters = (array) $request->input('filters');
-        $from = Carbon::parse($filters['from']);
-        $to = Carbon::parse($filters['to']);
+        $from = isset($filters['from'])
+            ? Carbon::parse($filters['from'])->startOfDay()
+            : now()->startOfMonth();
+        $to = isset($filters['to'])
+            ? Carbon::parse($filters['to'])->endOfDay()
+            : now()->endOfMonth();
         $orderTotals = OrderFacade::sumOrdersMonthly($from, $to, null) / 1000;
         $totalPayments = PaymentFacade::sumAmountWithUserCount($from, $to)->first();
         $totalUsers = UserFacade::sumTotalUsersMonthly($from, $to) . '';
-        $phones = OrderItemFacade::sumPhonesMonthly(now()->startOfMonth(), now()->endOfMonth());
+        $phones = OrderItemFacade::sumPhonesMonthly($from, $to, null);
         $totals = [
             new TotalObject('New User this Period', $totalUsers, 'users'),
             new TotalObject('Total Payments For Period', $totalPayments['total_amount'] ?? 0, 'payments'),
-            new TotalObject('Total Users Who Made Payments', $totalPayments['user_count'], 'payments'),
+            new TotalObject('Total Users Who Made Payments', $totalPayments['user_count'] ?? 0, 'payments'),
             new TotalObject('Total Orders Income For Period', $orderTotals . ' USD', 'orders'),
             new TotalObject('Total Completed Phones For Period', (string) $phones['completed_count'], 'phone-numbers'),
             new TotalObject('Total Refunded Phones For Period', (string) $phones['refunded_count'], 'phone-numbers'),

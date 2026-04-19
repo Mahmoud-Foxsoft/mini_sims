@@ -2,11 +2,10 @@
 import { onMounted, onUnmounted, ref, computed, watch } from "vue";
 import { useToast } from "primevue/usetoast";
 import { useConfirm } from "primevue/useconfirm";
-import { apiRequest } from "@/user/services/api";
-import { useAuthStore } from "@/user/stores/authStore";
-import OrderDialog from "@/user/components/OrderDialog.vue";
-import { useWsStore } from "@/user/stores/wsStore";
-import { unshiftToRefArray } from "../utils/utils";
+import { apiRequest } from "@/admin/services/api";
+import { useAuthStore } from "@/admin/stores/authStore";
+import UserSelect from "@/admin/components/UserSelect.vue";
+
 
 const toast = useToast();
 const confirm = useConfirm();
@@ -16,58 +15,6 @@ const totalRecords = ref(0);
 const first = ref(0);
 const rows = ref(20);
 const authStore = useAuthStore();
-const isOrderDialogVisible = ref(false);
-const wsStore = useWsStore();
-
-const showReloadPrompt = ref(false);
-
-watch(
-    () => wsStore.phoneRefundedLastUpdated,
-    (newValue) => {
-        if (!newValue) return;
-        fetchNumbers();
-        selectedNumbers.value = [];
-    },
-);
-
-watch(
-    () => wsStore.messageReceived,
-    (newMessage) => {
-        if (!newMessage) return;
-
-        // Find the phone number this message belongs to.
-        const targetPhone = phoneNumbers.value.find(p => p.id === newMessage.order_item_id);
-
-        if (targetPhone) {
-            // 1. Add the message to the array safely
-            if (!targetPhone.messages) {
-                targetPhone.messages = [];
-            }
-            targetPhone.messages.push(newMessage);
-
-            // 2. Change the status to completed
-            targetPhone.status = "completed";
-
-            // 3. Highlight the message count bubble (uses the isActive property from your template)
-            targetPhone.isActive = true;
-
-            // Remove the highlight after 3 seconds
-            setTimeout(() => {
-                targetPhone.isActive = false;
-            }, 3000);
-
-
-        } else {
-            // 4. Number is not on the current page, show the reload button
-            showReloadPrompt.value = true;
-        }
-    },
-);
-
-const handleReloadPrompt = () => {
-    showReloadPrompt.value = false;
-    applyFilters(); // Resets to page 1 and fetches latest data
-};
 
 const selectedNumbers = ref([]);
 const isDeletingBulk = ref(false);
@@ -92,6 +39,7 @@ const toggleAll = () => {
     }
 };
 
+const userFilter = ref(null);
 const expandedRows = ref({});
 const serviceFilter = ref("");
 const phoneFilter = ref("");
@@ -106,15 +54,15 @@ const statusOptions = [
 ];
 
 const now = ref(Date.now());
-let timeInterval = null;
-
 const cancelLoading = ref({});
-const reuseLoading = ref({});
 
 const buildQuery = (page) => {
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("per_page", String(rows.value));
+    if (userFilter.value) {
+        params.set("filters[user_id]", userFilter.value);
+    }
     if (serviceFilter.value?.trim()) {
         params.set("filters[service_name]", serviceFilter.value.trim());
     }
@@ -131,7 +79,7 @@ const fetchNumbers = async (page = 1) => {
     loading.value = true;
     try {
         const query = buildQuery(page);
-        const data = await apiRequest(`/v1/phone-numbers?${query}`);
+        const data = await apiRequest(`/phone-numbers?${query}`);
         phoneNumbers.value = data.data || [];
         totalRecords.value = data.total || 0;
         rows.value = data.per_page || 20;
@@ -193,13 +141,6 @@ const statusSeverity = (status) => {
     }
 };
 
-const canCancel = (createdAt) => {
-    if (!createdAt) return false;
-    const createdMs = new Date(createdAt).getTime();
-    const diffMinutes = (now.value - createdMs) / (1000 * 60);
-    return diffMinutes >= 2;
-};
-
 const copyToClipboard = async (text) => {
     try {
         await navigator.clipboard.writeText(text);
@@ -219,15 +160,6 @@ const copyToClipboard = async (text) => {
     }
 };
 
-const handleSubmit = (data) => {
-    for (let i = 0; i < data.numbers.length; i++) {
-        const element = data.numbers[i];
-        element.messages = [];
-        unshiftToRefArray(phoneNumbers, element,totalRecords, first, rows.value);
-    }
-    authStore.hydrate();
-}
-
 const handleCancel = (event, id) => {
     confirm.require({
         group: "confirm-popup",
@@ -241,7 +173,7 @@ const handleCancel = (event, id) => {
         accept: async () => {
             cancelLoading.value[id] = true;
             try {
-                await apiRequest(`/v1/phone-numbers/${id}/cancel`, {
+                await apiRequest(`/phone-numbers/${id}/cancel`, {
                     method: "POST",
                 });
                 toast.add({
@@ -252,7 +184,6 @@ const handleCancel = (event, id) => {
                 });
 
                 const currentPage = Math.floor(first.value / rows.value) + 1;
-                authStore.hydrate();
                 fetchNumbers(currentPage);
             } catch (error) {
                 toast.add({
@@ -266,32 +197,6 @@ const handleCancel = (event, id) => {
             }
         },
     });
-};
-
-const handleReuse = async (id) => {
-    reuseLoading.value[id] = true;
-    try {
-        await apiRequest(`/v1/phone-numbers/${id}/reuse`, { method: "POST" });
-
-        toast.add({
-            severity: "success",
-            summary: "Reused",
-            detail: "Phone number requested for reuse.",
-            life: 3000,
-        });
-        authStore.hydrate();
-        const currentPage = Math.floor(first.value / rows.value) + 1;
-        fetchNumbers(currentPage);
-    } catch (error) {
-        toast.add({
-            severity: "error",
-            summary: "Reuse Failed",
-            detail: error.message,
-            life: 4000,
-        });
-    } finally {
-        reuseLoading.value[id] = false;
-    }
 };
 
 const handleBulkDelete = () => {
@@ -339,13 +244,6 @@ const handleBulkDelete = () => {
 
 onMounted(() => {
     fetchNumbers();
-    timeInterval = setInterval(() => {
-        now.value = Date.now();
-    }, 10000);
-});
-
-onUnmounted(() => {
-    if (timeInterval) clearInterval(timeInterval);
 });
 </script>
 
@@ -358,46 +256,19 @@ onUnmounted(() => {
                 <h2 class="text-xl font-semibold">Phone Numbers</h2>
                 <p class="text-gray-600">All purchased numbers and services.</p>
             </div>
-
-            <div class="flex items-center gap-3">
-                <Button
-                    v-if="showReloadPrompt"
-                    label="New Updates! Reload"
-                    icon="pi pi-refresh"
-                    severity="info"
-                    class="animate-pulse"
-                    @click="handleReloadPrompt"
-                />
-
-                <div
-                    class="flex items-center text-sm font-medium px-3 py-2 bg-gray-100 dark:bg-gray-800 rounded-md"
-                >
-                    <span class="mr-1 text-gray-600 dark:text-gray-300"
-                        >Capacity:</span
-                    >
-                    <span
-                        :class="
-                            authStore.maxCartAmount === 0
-                                ? 'text-orange-500 font-bold'
-                                : 'text-primary'
-                        "
-                    >
-                        {{ authStore.maxCartAmount }}
-                    </span>
-                </div>
-
-                <Button
-                    label="Place Order"
-                    icon="pi pi-plus"
-                    @click="isOrderDialogVisible = true"
-                />
-            </div>
         </div>
 
         <Card class="shadow-sm">
             <template #content>
                 <div class="flex flex-col gap-3 mb-4">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div class="flex flex-col gap-2">
+                            <label class="font-medium">User</label>
+                            <UserSelect
+                                v-model="userFilter"
+                                placeholder="Search a user..."
+                            />
+                        </div>
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Service</label>
                             <InputText
@@ -543,7 +414,13 @@ onUnmounted(() => {
                             </div>
                         </template>
                     </Column>
-
+                    <Column field="user" header="User" style="min-width: 12rem">
+                        <template #body="slotProps">
+                            {{ slotProps.data.user.name }} ({{
+                                slotProps.data.user.email
+                            }})
+                        </template>
+                    </Column>
                     <Column
                         field="price_cents"
                         header="Price"
@@ -600,29 +477,10 @@ onUnmounted(() => {
                                     severity="danger"
                                     size="small"
                                     icon="pi pi-times"
-                                    :disabled="
-                                        !canCancel(slotProps.data.created_at)
-                                    "
                                     :loading="cancelLoading[slotProps.data.id]"
-                                    :title="
-                                        !canCancel(slotProps.data.created_at)
-                                            ? 'Available 2 minutes after purchase'
-                                            : ''
-                                    "
                                     @click="
                                         handleCancel($event, slotProps.data.id)
                                     "
-                                />
-
-                                <Button
-                                    v-if="slotProps.data.status === 'completed'"
-                                    label="Reuse"
-                                    severity="success"
-                                    outlined
-                                    size="small"
-                                    icon="pi pi-refresh"
-                                    :loading="reuseLoading[slotProps.data.id]"
-                                    @click="handleReuse(slotProps.data.id)"
                                 />
                             </div>
                         </template>
@@ -698,9 +556,4 @@ onUnmounted(() => {
             </template>
         </Card>
     </div>
-
-    <OrderDialog
-        v-model:visible="isOrderDialogVisible"
-        @submit="handleSubmit"
-    />
 </template>

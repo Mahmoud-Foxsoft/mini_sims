@@ -69,28 +69,6 @@ const handleReloadPrompt = () => {
     applyFilters(); // Resets to page 1 and fetches latest data
 };
 
-const selectedNumbers = ref([]);
-const isDeletingBulk = ref(false);
-
-const selectablePhoneNumbers = computed(() => {
-    return phoneNumbers.value.filter((num) => num.status !== "pending");
-});
-
-const isAllSelected = computed(() => {
-    if (!selectablePhoneNumbers.value.length) return false;
-    const selectedIds = selectedNumbers.value.map((n) => n.id);
-    return selectablePhoneNumbers.value.every((n) =>
-        selectedIds.includes(n.id),
-    );
-});
-
-const toggleAll = () => {
-    if (isAllSelected.value) {
-        selectedNumbers.value = [];
-    } else {
-        selectedNumbers.value = [...selectablePhoneNumbers.value];
-    }
-};
 
 const expandedRows = ref({});
 const serviceFilter = ref("");
@@ -294,49 +272,6 @@ const handleReuse = async (id) => {
     }
 };
 
-const handleBulkDelete = () => {
-    if (!selectedNumbers.value.length) return;
-
-    confirm.require({
-        group: "confirm-dialog",
-        message: `Are you sure you want to delete ${selectedNumbers.value.length} completed numbers? This action cannot be undone.`,
-        header: "Confirm Deletion",
-        icon: "pi pi-exclamation-triangle",
-        acceptClass: "p-button-danger",
-        accept: async () => {
-            isDeletingBulk.value = true;
-            const ids = selectedNumbers.value.map((num) => num.id);
-
-            try {
-                await apiRequest(`/phone-numbers/delete`, {
-                    method: "DELETE",
-                    body: { ids },
-                });
-
-                toast.add({
-                    severity: "success",
-                    summary: "Deleted",
-                    detail: "Selected numbers were successfully deleted.",
-                    life: 3000,
-                });
-
-                selectedNumbers.value = [];
-                const currentPage = Math.floor(first.value / rows.value) + 1;
-                fetchNumbers(currentPage);
-            } catch (error) {
-                toast.add({
-                    severity: "error",
-                    summary: "Deletion Failed",
-                    detail: error.message,
-                    life: 4000,
-                });
-            } finally {
-                isDeletingBulk.value = false;
-            }
-        },
-    });
-};
-
 onMounted(() => {
     fetchNumbers();
     timeInterval = setInterval(() => {
@@ -440,18 +375,6 @@ onUnmounted(() => {
                         </div>
                     </div>
                 </div>
-                <div class="flex p-2">
-                    <Button
-                        class="ms-auto"
-                        v-if="selectedNumbers.length > 0"
-                        :label="`Delete Selected (${selectedNumbers.length})`"
-                        icon="pi pi-trash"
-                        severity="danger"
-                        outlined
-                        :loading="isDeletingBulk"
-                        @click="handleBulkDelete"
-                    />
-                </div>
                 <DataTable
                     lazy
                     :value="phoneNumbers"
@@ -464,28 +387,6 @@ onUnmounted(() => {
                     dataKey="id"
                     @page="onPage"
                 >
-                    <Column headerStyle="width: 3rem">
-                        <template #header>
-                            <Checkbox
-                                :modelValue="isAllSelected"
-                                :binary="true"
-                                @update:modelValue="toggleAll"
-                                :disabled="selectablePhoneNumbers.length === 0"
-                                v-tooltip.top="
-                                    selectablePhoneNumbers.length === 0
-                                        ? 'No completed numbers to select'
-                                        : 'Select all completed'
-                                "
-                            />
-                        </template>
-                        <template #body="slotProps">
-                            <Checkbox
-                                v-model="selectedNumbers"
-                                :value="slotProps.data"
-                                :disabled="slotProps.data.status === 'pending'"
-                            />
-                        </template>
-                    </Column>
 
                     <Column expander style="width: 3rem" />
 

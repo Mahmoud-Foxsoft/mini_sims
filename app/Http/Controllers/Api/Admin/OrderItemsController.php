@@ -13,6 +13,7 @@ class OrderItemsController extends Controller
     {
         $filters = (array) $request->input('filters', []);
         $filters['with_messages'] = true;
+        $filters['with_user'] = true;
         $orderItems = OrderItemFacade::all($filters);
         return $this->sendResponse($orderItems, 'Orders retrieved successfully.');
     }

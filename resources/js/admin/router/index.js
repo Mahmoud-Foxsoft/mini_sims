@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from "vue-router";
-import { useAuthStore } from "@/user/stores/authStore";
-import AppLayout from "@/user/layout/AppLayout.vue";
+import { useAuthStore } from "@/admin/stores/authStore";
+import AppLayout from "@/admin/layout/AppLayout.vue";
 
 const router = createRouter({
-    history: createWebHistory("/dashboard/"),
+    history: createWebHistory("/admin/"),
     routes: [
         {
             path: "/",
@@ -13,61 +13,61 @@ const router = createRouter({
                     path: "",
                     name: "dashboard",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Dashboard.vue"),
+                    component: () => import("@/admin/views/Dashboard.vue"),
                 },
                 {
                     path: "orders",
                     name: "orders",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Orders.vue"),
+                    component: () => import("@/admin/views/Orders.vue"),
                 },
                 {
                     path: "phone-numbers",
                     name: "phoneNumbers",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/PhoneNumbers.vue"),
+                    component: () => import("@/admin/views/PhoneNumbers.vue"),
                 },
                 {
                     path: "transactions",
                     name: "transactions",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Transactions.vue"),
+                    component: () => import("@/admin/views/Transactions.vue"),
                 },
                 {
                     path: "payments",
                     name: "payments",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Payments.vue"),
+                    component: () => import("@/admin/views/Payments.vue"),
                 },
                 {
                     path: "services",
                     name: "services",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Services.vue"),
+                    component: () => import("@/admin/views/Services.vue"),
                 },
                 {
                     path: "profile",
                     name: "profile",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Profile.vue"),
-                },
-                {
-                    path: "settings",
-                    name: "settings",
-                    meta: { requiresAuth: true },
-                    component: () => import("@/views/Settings.vue"),
+                    component: () => import("@/admin/views/Profile.vue"),
                 },
                 {
                     path: "users",
                     name: "users",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Users.vue"),
+                    component: () => import("@/admin/views/Users.vue"),
                 },
                 {
                     path: "admins",
                     name: "admins",
                     meta: { requiresAuth: true },
-                    component: () => import("@/views/Admins.vue"),
+                    component: () => import("@/admin/views/Admins.vue"),
+                },
+                {
+                    path: "settings",
+                    name: "settings",
+                    meta: { requiresAuth: true },
+                    component: () => import("@/admin/views/Settings.vue"),
                 },
             ],
         },
@@ -75,7 +75,7 @@ const router = createRouter({
             path: "/auth/login",
             name: "login",
             meta: { guestOnly: true },
-            component: () => import("@/views/auth/Login.vue"),
+            component: () => import("@/admin/views/auth/Login.vue"),
         },
     ],
 });

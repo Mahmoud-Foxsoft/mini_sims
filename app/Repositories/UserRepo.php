@@ -49,8 +49,12 @@ class UserRepo implements UserInterface
                 $query->where('email', 'like', '%' . $filters['email'] . '%');
             })
             ->when(isset($filters['is_blocked']), function ($query) use ($filters) {
-                if ($filters['is_blocked'] === 'true') {
+                if ($filters['is_blocked'] === 'true' || $filters['is_blocked'] === true) {
                     $query->where('is_blocked', true);
+                }
+
+                if ($filters['is_blocked'] === 'false' || $filters['is_blocked'] === false) {
+                    $query->where('is_blocked', false);
                 }
             })->when(
                 (!empty($filters['sort'])),

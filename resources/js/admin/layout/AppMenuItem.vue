@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from "vue";
-import { useLayout } from "@/user/user/layout/composables/layout";
+import { useLayout } from "@/admin/layout/composables/layout";
 
 defineOptions({ name: "AppMenuItem" });
 

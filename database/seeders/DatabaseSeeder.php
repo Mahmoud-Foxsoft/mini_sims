@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Admin;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
@@ -23,33 +24,38 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'clean_email' => 'test@example.com',
+        Admin::factory()->create([
+            'name' => 'Test Admin',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('FoxSoft@123'), // 'FoxSoft@123',
         ]);
-        for ($i = 0; $i < 10; $i++) {
-            TransactionFacade::createCredit(
-                User::first(),
-                random_int(1000, 10000),
-                'Test Credit' . $i,
-            );
+        // User::factory()->create([
+        //     'name' => 'Test User',
+        //     'email' => 'test@example.com',
+        //     'clean_email' => 'test@example.com',
+        // ]);
+        // for ($i = 0; $i < 10; $i++) {
+        //     TransactionFacade::createCredit(
+        //         User::first(),
+        //         random_int(1000, 10000),
+        //         'Test Credit' . $i,
+        //     );
 
-            TransactionFacade::createDebit(
-                User::first(),
-                1000,
-                'Test Debit' . $i,
-            );
-        }
-        Order::factory(10)->create();
-        OrderItem::factory(10)->create();
-        PhoneMessage::factory(10)->create();
-        $this->call(
-            [
-                SettingSeeder::class,
-            ]
-        );
+        //     TransactionFacade::createDebit(
+        //         User::first(),
+        //         1000,
+        //         'Test Debit' . $i,
+        //     );
+        // }
+        // Order::factory(10)->create();
+        // OrderItem::factory(10)->create();
+        // PhoneMessage::factory(10)->create();
+        // $this->call(
+        //     [
+        //         SettingSeeder::class,
+        //     ]
+        // );
 
-        Payment::factory(3)->create();
+        // Payment::factory(3)->create();
     }
 }

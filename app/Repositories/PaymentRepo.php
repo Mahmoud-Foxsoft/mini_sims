@@ -67,7 +67,7 @@ class PaymentRepo implements PaymentInterface
         $payments = Payment::where('user_id', $user_id)
             ->when(
                 $filters['status'] ?? null,
-                fn ($query, $status) => $query->where('status', $status)
+                fn($query, $status) => $query->where('status', $status)
             )->when(
                 $filters['created_date'] ?? null,
                 function ($query) use ($filters) {
@@ -97,7 +97,7 @@ class PaymentRepo implements PaymentInterface
         $payments = Payment::with('user')
             ->when(
                 $filters['status'] ?? null,
-                fn ($query, $status) => $query->where('status', $status)
+                fn($query, $status) => $query->where('status', $status)
             )->when(
                 $filters['created_date'] ?? null,
                 function ($query) use ($filters) {
@@ -106,7 +106,7 @@ class PaymentRepo implements PaymentInterface
                 }
             )->when(
                 $filters['email'] ?? null,
-                fn ($query, $email) => $query->whereHas('user', fn ($q) => $q->where('email', 'like', "%$email%"))
+                fn($query, $email) => $query->whereHas('user', fn($q) => $q->where('email', 'like', "%$email%"))
             )->latest();
 
         return $payments->paginate(20);
@@ -179,9 +179,9 @@ class PaymentRepo implements PaymentInterface
      */
     public function sumAmountMonthly(?int $user_id = null): float
     {
-        return Cache::remember('sum.payment'.$user_id, 3600, function () use ($user_id) {
+        return Cache::remember('sum.payment' . $user_id, 3600, function () use ($user_id) {
             return Payment::query()
-                ->when($user_id, fn ($q) => $q->where('user_id', $user_id))
+                ->when($user_id, fn($q) => $q->where('user_id', $user_id))
                 ->whereBetween('created_at', [now()->startOfMonth(), now()->endOfMonth()])
                 ->where('status', Payment::FINISHED_STATUS)
                 ->sum('amount');
@@ -190,12 +190,14 @@ class PaymentRepo implements PaymentInterface
 
     public function sumAmountWithUserCount(Carbon $from, Carbon $to): Collection
     {
-        return Cache::remember('sum.payment_with_user_count_'.$from->toDateString().'_'.$to->toDateString(), 3600, function () use ($from, $to) {
+        $cachedResult = Cache::remember('sum.payment_with_user_count_' . $from->toDateString() . '_' . $to->toDateString(), 3600, function () use ($from, $to) {
             return Payment::query()
                 ->whereBetween('created_at', [$from, $to])
                 ->where('status', Payment::FINISHED_STATUS)
                 ->selectRaw('SUM(amount) as total_amount, COUNT(distinct user_id) as user_count')
                 ->get();
         });
+
+        return collect($cachedResult);
     }
 }

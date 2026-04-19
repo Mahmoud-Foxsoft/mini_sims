@@ -1,9 +1,9 @@
 <script setup>
 import { onMounted, ref, watch } from "vue";
 import { useToast } from "primevue/usetoast";
-import { apiRequest } from "@/user/services/api";
-import { formatDate } from "@/user/services/date";
-import { usePaymentDialogStore } from "@/user/stores/paymentDialogStore";
+import { apiRequest } from "@/admin/services/api";
+import { formatDate } from "@/admin/services/date";
+import UserSelect from "@/admin/components/UserSelect.vue";
 
 const toast = useToast();
 const loading = ref(false);
@@ -11,8 +11,8 @@ const payments = ref([]);
 const totalRecords = ref(0);
 const first = ref(0);
 const rows = ref(20);
-const paymentDialogStore = usePaymentDialogStore();
 
+const userFilter = ref(null);
 const statusFilter = ref(null);
 const createdDateFilter = ref(null);
 const statusOptions = [
@@ -24,14 +24,13 @@ const statusOptions = [
     { label: "Refunded", value: "refunded" },
 ];
 
-const openCreate = () => {
-    paymentDialogStore.open();
-};
-
 const buildQuery = (page) => {
     const params = new URLSearchParams();
     params.set("page", String(page));
     params.set("per_page", String(rows.value));
+    if (userFilter.value) {
+        params.set("filters[user_id]", userFilter.value);
+    }
     if (statusFilter.value) {
         params.set("filters[status]", statusFilter.value);
     }
@@ -46,7 +45,7 @@ const fetchPayments = async (page = 1) => {
     loading.value = true;
     try {
         const query = buildQuery(page);
-        const data = await apiRequest(`/v1/payments?${query}`);
+        const data = await apiRequest(`/payments?${query}`);
         payments.value = data.data || [];
         totalRecords.value = data.total || 0;
         rows.value = data.per_page || 20;
@@ -97,14 +96,6 @@ const statusSeverity = (status) => {
 };
 
 onMounted(() => fetchPayments());
-
-watch(
-    () => paymentDialogStore.refreshKey,
-    () => {
-        first.value = 0;
-        fetchPayments(1);
-    },
-);
 </script>
 
 <template>
@@ -114,13 +105,19 @@ watch(
                 <h2 class="text-xl font-semibold">Payments</h2>
                 <p class="text-gray-600">Create and track payments.</p>
             </div>
-            <Button label="New payment" icon="pi pi-plus" @click="openCreate" />
         </div>
 
         <Card class="shadow-sm">
             <template #content>
                 <div class="flex flex-col gap-3 mb-4">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="flex flex-col gap-2">
+                            <label class="font-medium">User</label>
+                            <UserSelect
+                                v-model="userFilter"
+                                placeholder="Search a user..."
+                            />
+                        </div>
                         <div class="flex flex-col gap-2">
                             <label class="font-medium">Status</label>
                             <Dropdown
@@ -173,6 +170,13 @@ watch(
                         header="Transaction"
                         style="min-width: 14rem"
                     />
+                    <Column field="user" header="User" style="min-width: 12rem">
+                        <template #body="slotProps">
+                            {{ slotProps.data.user.name }} ({{
+                                slotProps.data.user.email
+                            }})
+                        </template>
+                    </Column>
                     <Column
                         field="amount"
                         header="Amount"

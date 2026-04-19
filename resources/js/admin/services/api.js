@@ -1,4 +1,4 @@
-import { useAuthStore } from "@/user/stores/authStore";
+import { useAuthStore } from "@/admin/stores/authStore";
 
 const normalizeBase = (base) => {
     if (!base) return "";
@@ -6,7 +6,7 @@ const normalizeBase = (base) => {
 };
 
 const buildUrl = (path) => {
-    const base = normalizeBase(import.meta.env.VITE_API_BASE_URL || "/api");
+    const base = normalizeBase(import.meta.env.VITE_ADMIN_BASE_URL || "/api/admin");
     if (path.startsWith("http")) return path;
     if (!path.startsWith("/")) return `${base}/${path}`;
     return `${base}${path}`;

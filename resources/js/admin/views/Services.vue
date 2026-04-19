@@ -1,17 +1,11 @@
 <script setup>
 import { onMounted, ref, computed, watch } from "vue";
 import { useToast } from "primevue/usetoast";
-import { apiRequest } from "@/user/services/api";
-import { useWsStore } from "@/user/stores/wsStore";
+import { apiRequest } from "@/admin/services/api";
 
 const toast = useToast();
 const loading = ref(false);
 const services = ref([]);
-const wsStore = useWsStore();
-watch(
-    () => wsStore.servicesLastUpdated,
-    () => fetchServices(),
-);
 // Filters
 const nameFilter = ref(null);
 const codeFilter = ref(null);
@@ -37,15 +31,9 @@ const fetchServices = async () => {
     loading.value = true;
     try {
         const query = buildQuery();
-        const response = await apiRequest(`/v1/services?${query}`);
+        const response = await apiRequest(`/services?${query}`);
 
-        const rawServices = response.services || [];
-
-        // Add a local _cartQty property to each service for the UI controls
-        services.value = rawServices.map((service) => ({
-            ...service,
-            _cartQty: 1,
-        }));
+        services.value = response.services || [];
     } catch (error) {
         toast.add({
             severity: "error",

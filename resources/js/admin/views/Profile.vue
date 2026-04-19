@@ -1,21 +1,18 @@
 <script setup>
 import { onMounted, ref } from "vue";
 import { useToast } from "primevue/usetoast";
-import { useAuthStore } from "@/user/stores/authStore";
+import { useAuthStore } from "@/admin/stores/authStore";
 
 const toast = useToast();
 const authStore = useAuthStore();
 
 const loading = ref(false);
 const saving = ref(false);
-const apiKey = ref("");
-const apiKeyDialog = ref(false);
 
 const form = ref({
     name: "",
     password: "",
     password_confirmation: "",
-    webhook_url: "",
 });
 
 const loadProfile = async () => {
@@ -23,7 +20,6 @@ const loadProfile = async () => {
     try {
         const profile = await authStore.getProfile();
         form.value.name = profile.name || "";
-        form.value.webhook_url = profile.webhook_url || "";
     } catch (error) {
         toast.add({
             severity: "error",
@@ -41,7 +37,6 @@ const updateProfile = async () => {
     try {
         const payload = {
             name: form.value.name,
-            webhook_url: form.value.webhook_url,
         };
         if (form.value.password) {
             payload.password = form.value.password;
@@ -68,32 +63,6 @@ const updateProfile = async () => {
     }
 };
 
-const rotateApiKey = async () => {
-    try {
-        const data = await authStore.rotateApiKey();
-        apiKey.value = data.api_key || "";
-        apiKeyDialog.value = true;
-    } catch (error) {
-        toast.add({
-            severity: "error",
-            summary: "Rotation failed",
-            detail: error.message,
-            life: 4000,
-        });
-    }
-};
-
-const copyApiKey = async () => {
-    if (!apiKey.value) return;
-    await navigator.clipboard.writeText(apiKey.value);
-    toast.add({
-        severity: "success",
-        summary: "Copied",
-        detail: "API key copied.",
-        life: 2000,
-    });
-};
-
 onMounted(loadProfile);
 </script>
 
@@ -116,20 +85,6 @@ onMounted(loadProfile);
                                 <InputText
                                     id="profile-name"
                                     v-model="form.name"
-                                    :disabled="loading"
-                                    class="w-full"
-                                />
-                            </div>
-                            <div class="flex flex-col gap-2 flex-1">
-                                <label
-                                    class="font-medium"
-                                    for="profile-webhook-url"
-                                    >Webhook URL</label
-                                >
-                                <InputText
-                                    id="profile-webhook-url"
-                                    v-model="form.webhook_url"
-                                    placeholder="https://example.com/webhook"
                                     :disabled="loading"
                                     class="w-full"
                                 />
@@ -177,79 +132,6 @@ onMounted(loadProfile);
                     </div>
                 </template>
             </Card>
-
-            <Card class="shadow-sm">
-                <template #title>API Key</template>
-                <template #content>
-                    <p class="text-base text-gray-500">
-                        Rotate your API key when needed for external
-                        integrations.
-                    </p>
-                    <p class="text-sm text-gray-600 mt-2">
-                        The Api key expires after 1 year.
-                    </p>
-                    <div class="flex flex-col gap-2 mt-4">
-                        <Button
-                            label="Rotate API key"
-                            severity="secondary"
-                            @click="rotateApiKey"
-                        />
-                        <a target="_blank" href="/v1/docs" class="w-full">
-                            <Button
-                                label="View docs"
-                                class="w-full"
-                                severity="secondary"
-                            />
-                        </a>
-                    </div>
-                </template>
-            </Card>
         </div>
-
-        <Card class="shadow-sm">
-            <template #title>Webhook Payload Information</template>
-            <template #content>
-                <p class="text-gray-600 mb-4">
-                    When a message is received, a <code>POST</code> request will
-                    be sent to your configured Webhook URL containing the
-                    following JSON payload:
-                </p>
-                <div
-                    class="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg overflow-x-auto border border-gray-200 dark:border-gray-700"
-                >
-                    <pre
-                        class="text-sm text-gray-800 dark:text-gray-200 font-mono"
-                    ><code>{
-  "phone_number_id": "the phone number id",
-  "phone_number": "the phone number",
-  "service_name": "the service name",
-  "message": "the message"
-}</code></pre>
-                </div>
-            </template>
-        </Card>
-
-        <Dialog
-            v-model:visible="apiKeyDialog"
-            header="New API key"
-            modal
-            :style="{ width: '30rem' }"
-        >
-            <p class="text-sm text-gray-600">
-                Copy and store this key. It will not be shown again.
-            </p>
-            <div
-                class="mt-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg break-all"
-            >
-                {{ apiKey }}
-            </div>
-            <div class="mt-4 flex justify-end">
-                <Button
-                    label="Copy key"
-                    icon="pi pi-copy"
-                    @click="copyApiKey"
-                />
-            </div>
-        </Dialog>
     </div>
 </template>

@@ -34,4 +34,8 @@ class WalletTransaction extends Model
         'amount_cents' => 'integer',
     ];
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

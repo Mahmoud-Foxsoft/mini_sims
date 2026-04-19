@@ -2,7 +2,6 @@
 import { onMounted, ref } from "vue";
 import { useToast } from "primevue/usetoast";
 import { apiRequest } from "@/user/services/api";
-import { formatDate } from "@/user/services/date";
 
 const toast = useToast();
 const loading = ref(false);

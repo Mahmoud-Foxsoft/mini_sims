@@ -67,6 +67,11 @@ const model = ref([
         label: 'Account',
         items: [
             {
+                label: 'Settings',
+                icon: 'pi pi-cog',
+                to: '/settings'
+            },
+            {
                 label: 'Profile',
                 icon: 'pi pi-user',
                 to: '/profile'

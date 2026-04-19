@@ -9,7 +9,7 @@ import ToastService from 'primevue/toastservice';
 
 import 'primeicons/primeicons.css';
 import '../../css/app.css';
-import './styles/user.css';
+import '@/styles/user.css';
 import { definePreset } from '@primeuix/themes';
 const MyPreset = definePreset(Aura, {
     semantic: {
@@ -58,4 +58,4 @@ app.use(PrimeVue, {
 app.use(ToastService);
 app.use(ConfirmationService);
 
-app.mount('#user-dashboard');
+app.mount('#admin-dashboard');

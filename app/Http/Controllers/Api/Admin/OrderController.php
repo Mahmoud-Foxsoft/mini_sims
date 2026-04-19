@@ -17,8 +17,10 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         try {
-            $orders = OrderFacade::getAllOrders((array) $request->input('filters'));
-            return $this->sendResponse(['orders' => $orders], 'Orders retrieved successfully.');
+            $filters = (array) $request->input('filters');
+            $filters['with_user'] = true;
+            $orders = OrderFacade::getAllOrders($filters);
+            return $this->sendResponse($orders, 'Orders retrieved successfully.');
         } catch (\Throwable $th) {
             Log::error('Error fetching orders: ' . $th->getMessage(), ['stack' => $th->getTraceAsString()]);
             return $this->sendError('Failed to retrieve orders.', ['error' => $th->getMessage()], 500);
