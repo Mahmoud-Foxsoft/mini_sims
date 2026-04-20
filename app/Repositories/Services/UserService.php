@@ -38,8 +38,8 @@ class UserService
         return $this->repo->sumTotalUsersMonthly($from, $to);
     }
 
-    public function getForSelect(string $email): LengthAwarePaginator
+    public function getForSelect(string $email, int $perPage = 10): LengthAwarePaginator
     {
-        return $this->repo->getForSelect($email);
+        return $this->repo->getForSelect($email, $perPage);
     }
 }

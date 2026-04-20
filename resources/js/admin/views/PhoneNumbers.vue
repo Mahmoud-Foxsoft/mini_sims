@@ -112,6 +112,7 @@ const clearFilters = () => {
     serviceFilter.value = "";
     phoneFilter.value = "";
     statusFilter.value = null;
+    userFilter.value = null;
     applyFilters();
 };
 

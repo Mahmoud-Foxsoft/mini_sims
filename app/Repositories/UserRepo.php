@@ -94,9 +94,19 @@ class UserRepo implements UserInterface
         });
     }
 
-    public function getForSelect(string $email): LengthAwarePaginator
+    public function getForSelect(string $email, int $perPage = 10): LengthAwarePaginator
     {
-        $users =  $this->model->with('userPlans:slug,alias,user_id')->select('id', 'email')->where('email', 'like', '%' . $email . '%')->paginate(10);
+        $users = $this->model
+            ->select('id', 'name', 'email')
+            ->when($email !== '', function ($query) use ($email) {
+                $query->where(function ($innerQuery) use ($email) {
+                    $innerQuery
+                        ->where('email', 'like', '%' . $email . '%')
+                        ->orWhere('name', 'like', '%' . $email . '%');
+                });
+            })
+            ->paginate($perPage);
+
         return $users;
     }
 }

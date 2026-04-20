@@ -75,6 +75,7 @@ const applyFilters = () => {
 const clearFilters = () => {
     statusFilter.value = null;
     createdDateFilter.value = null;
+    userFilter.value = null;
     applyFilters();
 };
 

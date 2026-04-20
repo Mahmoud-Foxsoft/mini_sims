@@ -75,6 +75,7 @@ const applyFilters = () => {
 const clearFilters = () => {
     typeFilter.value = null;
     referenceFilter.value = "";
+    userFilter.value = null;
     applyFilters();
 };
 

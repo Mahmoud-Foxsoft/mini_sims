@@ -16,7 +16,8 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         if ($request->input('select')) {
-            $users = UserFacade::getForSelect($request->input('email') ?? '');
+            $perPage = max(1, min((int) $request->input('per_page', 10), 100));
+            $users = UserFacade::getForSelect($request->input('email') ?? '', $perPage);
         } else {
             $users = UserFacade::filter(
                 (array) $request->input('filters'),

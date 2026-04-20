@@ -54,5 +54,5 @@ interface UserInterface
 
     public function sumTotalUsersMonthly(?Carbon $from, ?Carbon $to): int;
 
-    public function getForSelect(string $email): LengthAwarePaginator;
+    public function getForSelect(string $email, int $perPage = 10): LengthAwarePaginator;
 }

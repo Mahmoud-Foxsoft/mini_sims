@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Facade;
  * @method static \Illuminate\Contracts\Pagination\LengthAwarePaginator filter(array $filters)
  * @method static bool addBalance(\App\Models\User $user, float $amount)
  * @method static bool checkBalance(\App\Models\User $user, float $amount)
- * @method static \Illuminate\Contracts\Pagination\LengthAwarePaginator getForSelect(string $email)
+ * @method static \Illuminate\Contracts\Pagination\LengthAwarePaginator getForSelect(string $email, int $perPage = 10)
  * @method static int sumTotalUsersMonthly()
  * @see \App\Repositories\Services\UserService
  */
