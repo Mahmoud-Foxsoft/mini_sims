@@ -182,5 +182,19 @@ onMounted(() => {
                 <div class="h-2 bg-surface-100 dark:bg-surface-800 rounded w-1/2 animate-pulse"></div>
             </div>
         </template>
+
+        <template #emptyfilter>
+            <div class="px-3 py-2 text-sm text-gray-500 flex items-center gap-2">
+                <i v-if="loading" class="pi pi-spinner pi-spin"></i>
+                <span>{{ loading ? "Loading users..." : "No users found" }}</span>
+            </div>
+        </template>
+
+        <template #empty>
+            <div class="px-3 py-2 text-sm text-gray-500 flex items-center gap-2">
+                <i v-if="loading" class="pi pi-spinner pi-spin"></i>
+                <span>{{ loading ? "Loading users..." : "No users available" }}</span>
+            </div>
+        </template>
     </Dropdown>
 </template>
