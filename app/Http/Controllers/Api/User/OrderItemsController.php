@@ -44,7 +44,7 @@ class OrderItemsController extends Controller
         }
 
         try {
-            $success = PhoneNumberService::cancelPhoneNumber($orderItem->external_order_id, $request->user()->id);
+            $success = PhoneNumberService::cancelPhoneNumber($orderItem->external_order_id);
             // $success = true; // Simulate success for testing purposes
             if ($success) {
                 OrderItemFacade::cancel($orderItem);
@@ -98,7 +98,7 @@ class OrderItemsController extends Controller
             return $this->sendError('Reuse is already in progress for this number.', [], 429);
         }
         try {
-            $response = PhoneNumberService::reusePhoneNumber($orderItem->external_order_id, $request->user()->id);
+            $response = PhoneNumberService::reusePhoneNumber($orderItem->external_order_id);
             if ($response) {
                 OrderItemFacade::reuse($orderItem, $response);
                 return $this->sendResponse(null, 'Phone number reused successfully.');

@@ -2,7 +2,6 @@
 
 namespace App\Http\Services;
 
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -15,9 +14,8 @@ class PhoneNumberService
                 ->retry(3, 200)
                 ->post(config('services.centralServer.phone_numbers_url'), [
                     'service' => $service_code,
-                    'qty' => $count,
-                    'user_id' => $user_id,
-                ])
+                    'numbers_count' => $count,
+                ])->throw()
                 ->json();
             return $response;
         } catch (\Throwable $th) {
@@ -28,17 +26,17 @@ class PhoneNumberService
         }
     }
 
-    public static function cancelPhoneNumber(string $request_id,int $user_id): bool
+    public static function cancelPhoneNumber(string $request_id): bool
     {
         try {
-            $response = Http::centralServer()
+            Http::centralServer()
                 ->retry(3, 200)
                 ->post(config('services.centralServer.cancel_url'), [
                     'request_id' => $request_id,
-                    'user_id' => $user_id,
-                ])
-                ->json();
-            return $response['status'] === 'canceled' ?? false;
+                    'not_working' => 0,
+                ])->throw();
+
+            return true;
         } catch (\Throwable $th) {
             Log::error('Error cancelling phone number on Central Server', [
                 'exception' => $th->getMessage(),

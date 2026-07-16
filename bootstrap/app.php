@@ -30,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })->withSchedule(function (Schedule $schedule) {
         $schedule->command(App\Console\Commands\ExpirePhoneNumber::class)->everyMinute();
+        $schedule->command(App\Console\Commands\SyncFoxSimsServices::class)->cron('0 0 */3 * *');
         $schedule->command('model:prune')->daily();
         $schedule->command('passport:purge')->hourly();
     })

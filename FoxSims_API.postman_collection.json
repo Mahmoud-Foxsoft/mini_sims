@@ -1,0 +1,361 @@
+{
+  "info": {
+    "_postman_id": "c1fb04ea-8a2c-4f86-9c2e-foxsims-api-v1",
+    "name": "FoxSims API",
+    "description": "Postman collection generated from the FoxSims API documentation.\n\nSet the `api_key` collection variable before sending requests.\nBase URL: https://foxsims.com\nAuthentication header: x-api-key",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "x-api-key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{api_key}}",
+        "type": "string"
+      },
+      {
+        "key": "in",
+        "value": "header",
+        "type": "string"
+      }
+    ]
+  },
+  "event": [
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Response time is below 5000ms', function () {",
+          "    pm.expect(pm.response.responseTime).to.be.below(5000);",
+          "});",
+          "",
+          "pm.test('Response is JSON', function () {",
+          "    pm.response.to.be.json;",
+          "});"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://foxsims.com",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "",
+      "type": "secret"
+    },
+    {
+      "key": "page",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "request_id",
+      "value": "8534201167703180",
+      "type": "string"
+    },
+    {
+      "key": "service_code",
+      "value": "4",
+      "type": "string"
+    },
+    {
+      "key": "numbers_count",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "search",
+      "value": "ticketmaster",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Plans and Account",
+      "item": [
+        {
+          "name": "Get Plans",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/plans",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "plans"
+              ]
+            },
+            "description": "Retrieve all temporary-number plans, supported services, availability, and prices in cents."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/balance",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "balance"
+              ]
+            },
+            "description": "Retrieve the current user wallet balance."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Messages",
+      "item": [
+        {
+          "name": "Get Messages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/messages?page={{page}}&filter%5Brequest_id%5D={{request_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "messages"
+              ],
+              "query": [
+                {
+                  "key": "page",
+                  "value": "{{page}}",
+                  "description": "Optional page number"
+                },
+                {
+                  "key": "filter[request_id]",
+                  "value": "{{request_id}}",
+                  "description": "Optional rental request ID",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Retrieve paginated SMS messages. Enable the request_id filter when needed."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Numbers",
+      "item": [
+        {
+          "name": "Get Virtual Numbers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/numbers?search={{search}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "numbers"
+              ],
+              "query": [
+                {
+                  "key": "search",
+                  "value": "{{search}}",
+                  "description": "Optional number, name, or service search",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "List virtual numbers assigned to the authenticated account."
+          },
+          "response": []
+        },
+        {
+          "name": "Get Old One-Time Numbers",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/v1/old_one_time_numbers_list",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "old_one_time_numbers_list"
+              ]
+            },
+            "description": "Retrieve previously used one-time numbers and their pricing."
+          },
+          "response": []
+        },
+        {
+          "name": "Request Service Numbers",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"service\": {{service_code}},\n  \"numbers_count\": {{numbers_count}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/request_service",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "request_service"
+              ]
+            },
+            "description": "Rent one or more numbers using a service code returned by Get Plans."
+          },
+          "response": []
+        },
+        {
+          "name": "Cancel Number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"not_working\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/cancel_number",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "cancel_number"
+              ]
+            },
+            "description": "Cancel an active number. Set not_working to 1 when reporting a non-working number."
+          },
+          "response": []
+        },
+        {
+          "name": "Toggle Auto Renew",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{request_id}}\",\n  \"is_renewable\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/user_numbers/auto_renew",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "user_numbers",
+                "auto_renew"
+              ]
+            },
+            "description": "Enable or disable automatic renewal for a rental number."
+          },
+          "response": []
+        },
+        {
+          "name": "Reuse Number",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"request_id\": \"{{request_id}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/reuse_number",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "reuse_number"
+              ]
+            },
+            "description": "Reuse an eligible rental or one-time number using its original request ID."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

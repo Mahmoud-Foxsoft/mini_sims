@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\Admin\OrderItemsController;
 use App\Http\Controllers\Api\Admin\PaymentController;
 use App\Http\Controllers\Api\Admin\ReportController;
 use App\Http\Controllers\Api\Admin\SettingController;
+use App\Http\Controllers\Api\Admin\ServicesController as AdminServicesController;
 use App\Http\Controllers\Api\Admin\TransactionController;
 use App\Http\Controllers\Api\Admin\UserController;
 use App\Http\Controllers\Api\ContactController;
@@ -36,7 +37,7 @@ Route::prefix('admin')->group(function () {
         Route::get('settings', [SettingController::class, 'index']);
         Route::put('settings/{setting}', [SettingController::class, 'update']);
 
-        Route::get('services', ServicesController::class);
+        Route::apiResource('services', AdminServicesController::class)->except(['show']);
         
         Route::get('home', HomeController::class);
         Route::get('reports', ReportController::class);

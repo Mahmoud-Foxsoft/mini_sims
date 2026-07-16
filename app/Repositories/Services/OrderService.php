@@ -5,6 +5,7 @@ namespace App\Repositories\Services;
 use App\Http\Services\PhoneNumberService;
 use App\Http\Services\PhoneServiceService;
 use App\Models\Order;
+use App\Models\Service;
 use App\Models\User;
 use App\Repositories\Facades\OrderItemFacade;
 use App\Repositories\Facades\UserFacade;
@@ -43,15 +44,13 @@ class OrderService
             throw new Exception("Limit exceeded. You only have capacity for {$availableSpace} more numbers.", 422);
         }
 
-        $services = PhoneServiceService::getPhoneServices();
-        $servicesByCode = collect($services)->keyBy('code');
-        $service = $servicesByCode->get($serviceCode);
+        $service = Service::query()->where('code', $serviceCode)->first();
 
         if (!$service) {
             throw new Exception("Service with code {$serviceCode} not found", 404);
         }
 
-        $maxPotentialCost = $service['price'] * 100 * $quantity;
+        $maxPotentialCost = $service->price_cents * $quantity;
 
         // --- 2. THE ATOMIC RESERVATION ---
         // This query says: "Only deduct the balance if they have enough money".
@@ -81,9 +80,9 @@ class OrderService
                 $fulfilledNumbers[] = [
                     'service_code' => $serviceCode,
                     'phone_data' => $phoneRecord,
-                    'price' => $service['price'] * 100,
+                    'price' => $service->price_cents,
                 ];
-                $actualTotalCostCents += $service['price'] * 100;
+                $actualTotalCostCents += $service->price_cents;
             }
 
             if (empty($fulfilledNumbers)) {
@@ -96,7 +95,7 @@ class OrderService
                 $fulfilledNumbers,
                 $actualTotalCostCents,
                 $maxPotentialCost, // Passing this so the repo knows how much to refund
-                $servicesByCode
+                collect([$serviceCode => ['name' => $service->name]])
             );
 
             return [
