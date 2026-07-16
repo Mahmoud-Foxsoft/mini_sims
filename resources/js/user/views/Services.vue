@@ -7,6 +7,9 @@ import { useWsStore } from "@/user/stores/wsStore";
 const toast = useToast();
 const loading = ref(false);
 const services = ref([]);
+const totalRecords = ref(0);
+const first = ref(0);
+const rows = ref(20);
 const wsStore = useWsStore();
 watch(
     () => wsStore.servicesLastUpdated,
@@ -17,8 +20,10 @@ const nameFilter = ref(null);
 const codeFilter = ref(null);
 const priceFilter = ref(null);
 
-const buildQuery = () => {
+const buildQuery = (page) => {
     const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("per_page", String(rows.value));
 
     if (nameFilter.value) {
         params.set("filters[name]", nameFilter.value);
@@ -33,10 +38,10 @@ const buildQuery = () => {
     return params.toString();
 };
 
-const fetchServices = async () => {
+const fetchServices = async (page = 1) => {
     loading.value = true;
     try {
-        const query = buildQuery();
+        const query = buildQuery(page);
         const response = await apiRequest(`/v1/services?${query}`);
 
         const rawServices = response.services || [];
@@ -46,6 +51,8 @@ const fetchServices = async () => {
             ...service,
             _cartQty: 1,
         }));
+        totalRecords.value = response.pagination?.total || 0;
+        rows.value = response.pagination?.per_page || rows.value;
     } catch (error) {
         toast.add({
             severity: "error",
@@ -59,14 +66,21 @@ const fetchServices = async () => {
 };
 
 const applyFilters = () => {
-    fetchServices();
+    first.value = 0;
+    fetchServices(1);
 };
 
 const clearFilters = () => {
     nameFilter.value = null;
     codeFilter.value = null;
     priceFilter.value = null;
-    fetchServices();
+    applyFilters();
+};
+
+const onPage = (event) => {
+    first.value = event.first;
+    rows.value = event.rows;
+    fetchServices(event.page + 1);
 };
 
 onMounted(() => fetchServices());
@@ -138,8 +152,15 @@ onMounted(() => fetchServices());
                 </div>
 
                 <DataTable
+                    lazy
                     :value="services"
                     :loading="loading"
+                    paginator
+                    :rows="rows"
+                    :rowsPerPageOptions="[10, 20, 50]"
+                    :totalRecords="totalRecords"
+                    :first="first"
+                    @page="onPage"
                     responsiveLayout="scroll"
                 >
                     <Column

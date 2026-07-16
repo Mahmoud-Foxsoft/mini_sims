@@ -9,6 +9,9 @@ const loading = ref(false);
 const saving = ref(false);
 const deletingId = ref(null);
 const services = ref([]);
+const totalRecords = ref(0);
+const first = ref(0);
+const rows = ref(20);
 
 const nameFilter = ref(null);
 const codeFilter = ref(null);
@@ -22,8 +25,10 @@ const form = ref({
     price: 0,
 });
 
-const buildQuery = () => {
+const buildQuery = (page) => {
     const params = new URLSearchParams();
+    params.set("page", String(page));
+    params.set("per_page", String(rows.value));
 
     if (nameFilter.value) {
         params.set("filters[name]", nameFilter.value);
@@ -38,13 +43,15 @@ const buildQuery = () => {
     return params.toString();
 };
 
-const fetchServices = async () => {
+const fetchServices = async (page = 1) => {
     loading.value = true;
 
     try {
-        const query = buildQuery();
+        const query = buildQuery(page);
         const response = await apiRequest(`/services?${query}`);
         services.value = response.services || [];
+        totalRecords.value = response.pagination?.total || 0;
+        rows.value = response.pagination?.per_page || rows.value;
     } catch (error) {
         toast.add({
             severity: "error",
@@ -58,14 +65,21 @@ const fetchServices = async () => {
 };
 
 const applyFilters = () => {
-    fetchServices();
+    first.value = 0;
+    fetchServices(1);
 };
 
 const clearFilters = () => {
     nameFilter.value = null;
     codeFilter.value = null;
     priceFilter.value = null;
-    fetchServices();
+    applyFilters();
+};
+
+const onPage = (event) => {
+    first.value = event.first;
+    rows.value = event.rows;
+    fetchServices(event.page + 1);
 };
 
 const resetForm = () => {
@@ -233,8 +247,15 @@ onMounted(() => fetchServices());
                 </div>
 
                 <DataTable
+                    lazy
                     :value="services"
                     :loading="loading"
+                    paginator
+                    :rows="rows"
+                    :rowsPerPageOptions="[10, 20, 50]"
+                    :totalRecords="totalRecords"
+                    :first="first"
+                    @page="onPage"
                     responsiveLayout="scroll"
                 >
                     <Column field="name" header="Service Name" style="min-width: 14rem">

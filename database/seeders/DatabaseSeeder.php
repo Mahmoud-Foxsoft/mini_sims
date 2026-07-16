@@ -24,11 +24,12 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Admin::factory()->create([
-        //     'name' => 'Test Admin',
-        //     'email' => 'admin@example.com',
-        //     'password' => bcrypt('FoxSoft@123'), // 'FoxSoft@123',
-        // ]);
+        Admin::factory()->create([
+            'name' => 'Test Admin',
+            'email' => 'admin@example.com',
+            'password' => bcrypt('password'), // 'FoxSoft@123',
+        ]);
+        return;
         // User::factory(100)->create();
         for ($i = 0; $i < 10; $i++) {
             $user = User::inRandomOrder()->first();

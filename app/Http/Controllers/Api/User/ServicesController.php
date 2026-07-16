@@ -19,9 +19,13 @@ class ServicesController extends Controller
      */
     public function __invoke(Request $request)
     {
-        $services = PhoneServiceService::getPhoneServices((array) $request->input('filters', []));
-        return $this->sendResponse([
-            'services' => $services,
-        ], 'Phone services retrieved successfully');
+        $filters = (array) $request->input('filters', []);
+        $filters['search'] = $request->string('search')->trim()->toString();
+        $perPage = min(max($request->integer('per_page', 20), 1), 100);
+
+        return $this->sendResponse(
+            PhoneServiceService::paginatePhoneServices($filters, $perPage),
+            'Phone services retrieved successfully'
+        );
     }
 }

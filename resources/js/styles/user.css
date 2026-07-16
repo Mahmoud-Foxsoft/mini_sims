@@ -55,7 +55,7 @@
 
 .layout-wrapper {
     min-height: 100vh;
-    background: var();
+    background: var(--surface-50);
 }
 
 .layout-topbar {

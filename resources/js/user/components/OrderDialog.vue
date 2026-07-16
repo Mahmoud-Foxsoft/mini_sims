@@ -13,15 +13,19 @@ const authStore = useAuthStore();
 
 const localServices = ref([]);
 const loading = ref(false);
+const totalRecords = ref(0);
+const totalPages = ref(0);
+const searchQuery = ref("");
 const isSubmitting = ref(false);
+const pageSize = 20;
+const loadedPages = new Set();
+const loadingPages = new Set();
+let searchTimeout = null;
+let requestGeneration = 0;
 
 const selectedService = ref(null);
 const quantity = ref(1);
 const emits = defineEmits(["submit"]);
-const displayServices = computed(() => {
-    return localServices.value;
-});
-
 const maxQuantity = computed(() => {
     return authStore.maxCartAmount || 5;
 });
@@ -31,14 +35,54 @@ const totalCost = computed(() => {
     return Number(selectedService.value.price) * quantity.value;
 });
 
-const fetchServices = async (force = false) => {
-    if (!force && localServices.value.length) return;
+const initializePlaceholders = (count) => {
+    localServices.value = Array.from({ length: count }, () => ({
+        name: searchQuery.value,
+        code: searchQuery.value,
+        price: 0,
+        _isPlaceholder: true,
+    }));
+};
 
+const loadPage = async (page, generation = requestGeneration) => {
+    if (page < 1 || (totalPages.value > 0 && page > totalPages.value)) return;
+
+    const requestKey = `${generation}:${page}`;
+    if (loadedPages.has(page) || loadingPages.has(requestKey)) return;
+
+    loadingPages.add(requestKey);
     loading.value = true;
+
     try {
-        const response = await apiRequest(`/v1/services`);
-        localServices.value = response.services || [];
+        const params = new URLSearchParams({
+            page: String(page),
+            per_page: String(pageSize),
+        });
+
+        if (searchQuery.value) params.set("search", searchQuery.value);
+
+        const response = await apiRequest(`/v1/services?${params.toString()}`);
+        if (generation !== requestGeneration) return;
+
+        const pagination = response.pagination || {};
+        totalRecords.value = Number(pagination.total || 0);
+        totalPages.value = Number(pagination.last_page || 0);
+
+        if (localServices.value.length !== totalRecords.value) {
+            initializePlaceholders(totalRecords.value);
+        }
+
+        const nextServices = [...localServices.value];
+        const start = (page - 1) * pageSize;
+        (response.services || []).forEach((service, index) => {
+            nextServices[start + index] = service;
+        });
+
+        localServices.value = nextServices;
+        loadedPages.add(page);
     } catch (error) {
+        if (generation !== requestGeneration) return;
+
         toast.add({
             severity: "error",
             summary: "Failed to load services",
@@ -46,13 +90,45 @@ const fetchServices = async (force = false) => {
             life: 4000,
         });
     } finally {
-        loading.value = false;
+        loadingPages.delete(requestKey);
+        if (generation === requestGeneration) {
+            loading.value = loadingPages.size > 0;
+        }
+    }
+};
+
+const resetAndLoad = (query = "") => {
+    requestGeneration += 1;
+    searchQuery.value = String(query).trim();
+    localServices.value = [];
+    totalRecords.value = 0;
+    totalPages.value = 0;
+    loadedPages.clear();
+    loadingPages.clear();
+    loadPage(1);
+};
+
+const onFilter = (event) => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => resetAndLoad(event.value || ""), 300);
+};
+
+const onLazyLoad = (event) => {
+    const firstPage = Math.floor(Number(event.first || 0) / pageSize) + 1;
+    const lastIndex = Math.max(Number(event.last || pageSize) - 1, 0);
+    const lastPage = Math.floor(lastIndex / pageSize) + 1;
+    const upperPage = totalPages.value
+        ? Math.min(lastPage, totalPages.value)
+        : lastPage;
+
+    for (let page = firstPage; page <= upperPage; page += 1) {
+        loadPage(page);
     }
 };
 
 watch(visible, (isNowVisible) => {
     if (isNowVisible) {
-        fetchServices();
+        resetAndLoad();
         selectedService.value = null;
         quantity.value = 1;
     }
@@ -64,7 +140,7 @@ watch(
     (value) => {
         if (!value) return
         selectedService.value = null
-        fetchServices(true)
+        resetAndLoad(searchQuery.value)
     },
 );
 
@@ -144,11 +220,23 @@ const handleCheckout = async () => {
                 >
                 <Dropdown
                     v-model="selectedService"
-                    :options="displayServices"
+                    :options="localServices"
                     optionLabel="name"
+                    optionDisabled="_isPlaceholder"
                     placeholder="Search and select a service"
                     filter
+                    filterMatchMode="contains"
+                    :filterFields="['name', 'code']"
                     :loading="loading"
+                    scrollHeight="280px"
+                    :virtualScrollerOptions="{
+                        lazy: true,
+                        onLazyLoad,
+                        itemSize: 62,
+                        showLoader: false,
+                        loading,
+                    }"
+                    @filter="onFilter"
                     class="w-full"
                 >
                     <template #value="slotProps">
@@ -162,7 +250,10 @@ const handleCheckout = async () => {
                     </template>
 
                     <template #option="slotProps">
-                        <div class="flex flex-col py-1">
+                        <div
+                            v-if="!slotProps.option._isPlaceholder"
+                            class="flex flex-col py-1 transition-opacity duration-200"
+                        >
                             <div
                                 class="font-medium text-gray-900 dark:text-gray-100"
                             >
@@ -181,6 +272,24 @@ const handleCheckout = async () => {
                                     }}</span
                                 >
                             </div>
+                        </div>
+                        <div v-else class="flex h-[62px] flex-col justify-center gap-2 py-2">
+                            <div class="h-3 w-2/3 animate-pulse rounded bg-surface-200 dark:bg-surface-700"></div>
+                            <div class="h-2 w-1/2 animate-pulse rounded bg-surface-100 dark:bg-surface-800"></div>
+                        </div>
+                    </template>
+
+                    <template #emptyfilter>
+                        <div class="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
+                            <i v-if="loading" class="pi pi-spinner pi-spin"></i>
+                            <span>{{ loading ? "Searching services..." : "No services found" }}</span>
+                        </div>
+                    </template>
+
+                    <template #empty>
+                        <div class="flex items-center gap-2 px-3 py-2 text-sm text-gray-500">
+                            <i v-if="loading" class="pi pi-spinner pi-spin"></i>
+                            <span>{{ loading ? "Loading services..." : "No services available" }}</span>
                         </div>
                     </template>
                 </Dropdown>

@@ -16,6 +16,7 @@ class ServicesController extends Controller
     public function index(Request $request): JsonResponse
     {
         $filters = (array) $request->input('filters', []);
+        $perPage = min(max($request->integer('per_page', 20), 1), 100);
 
         $query = Service::query()->orderBy('name');
 
@@ -31,10 +32,21 @@ class ServicesController extends Controller
             $query->where('price_cents', (int) round(((float) $filters['price']) * 100));
         }
 
-        $services = $query->get()->map(fn (Service $service) => PhoneServiceService::transformServiceForAdmin($service))->toArray();
+        $paginator = $query->paginate($perPage);
+        $services = $paginator->getCollection()
+            ->map(fn (Service $service) => PhoneServiceService::transformServiceForAdmin($service))
+            ->values()
+            ->toArray();
 
         return $this->sendResponse([
             'services' => $services,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'has_more' => $paginator->hasMorePages(),
+            ],
         ], 'Phone services retrieved successfully');
     }
 

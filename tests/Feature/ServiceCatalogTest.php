@@ -81,6 +81,38 @@ it('serves user services as a flat name code price payload', function () {
     expect(array_keys($response->json('data.services.0')))->toBe(['name', 'code', 'price']);
 });
 
+it('paginates and searches user services by name or code', function () {
+    foreach (range(1, 25) as $index) {
+        Service::create([
+            'name' => sprintf('Service %02d', $index),
+            'code' => sprintf('code-%02d', $index),
+            'price_cents' => 100 + $index,
+        ]);
+    }
+
+    Passport::actingAs(User::factory()->create(), ['user-api'], 'api');
+
+    $this->getJson('/api/v1/services?per_page=10&page=2')
+        ->assertOk()
+        ->assertJsonCount(10, 'data.services')
+        ->assertJsonPath('data.pagination.current_page', 2)
+        ->assertJsonPath('data.pagination.last_page', 3)
+        ->assertJsonPath('data.pagination.per_page', 10)
+        ->assertJsonPath('data.pagination.total', 25)
+        ->assertJsonPath('data.pagination.has_more', true);
+
+    $this->getJson('/api/v1/services?search=code-23&per_page=10')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.services')
+        ->assertJsonPath('data.services.0.name', 'Service 23')
+        ->assertJsonPath('data.pagination.total', 1);
+
+    $this->getJson('/api/v1/services?search=Service%2007&per_page=10')
+        ->assertOk()
+        ->assertJsonCount(1, 'data.services')
+        ->assertJsonPath('data.services.0.code', 'code-07');
+});
+
 it('allows admins to create update and delete services', function () {
     Passport::actingAs(Admin::factory()->create(), ['admin-api'], 'admin');
 

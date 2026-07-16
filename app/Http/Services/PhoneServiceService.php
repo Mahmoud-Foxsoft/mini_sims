@@ -3,6 +3,7 @@
 namespace App\Http\Services;
 
 use App\Models\Service;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -15,41 +16,53 @@ class PhoneServiceService
 
     public static function getPhoneServices(array $filters = []): array
     {
-        if (empty(Cache::get(self::CACHE_KEY, []))) {
-            Cache::forget(self::CACHE_KEY);
-        }
+        return self::query($filters)
+            ->get()
+            ->map(fn (Service $service) => self::transformService($service))
+            ->toArray();
+    }
 
-        $allServices = Cache::remember(self::CACHE_KEY, 24 * 60 * 60, function () {
-            return Service::query()
-                ->orderBy('name')
-                ->get()
+    public static function paginatePhoneServices(array $filters = [], int $perPage = 20): array
+    {
+        $paginator = self::query($filters)->paginate($perPage);
+
+        return [
+            'services' => $paginator->getCollection()
                 ->map(fn (Service $service) => self::transformService($service))
-                ->toArray();
-        });
+                ->values()
+                ->toArray(),
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+                'has_more' => $paginator->hasMorePages(),
+            ],
+        ];
+    }
 
-        if (empty($filters)) {
-            return $allServices;
-        }
+    private static function query(array $filters = []): Builder
+    {
+        return Service::query()
+            ->when(! empty($filters['search']), function (Builder $query) use ($filters) {
+                $search = trim((string) $filters['search']);
 
-        $filteredServices = collect($allServices)->filter(function ($service) use ($filters) {
-            if (isset($filters['name'])) {
-                if (!str_contains(strtolower($service['name']), strtolower($filters['name']))) {
-                    return false;
-                }
-            }
-
-            if (isset($filters['code']) && $service['code'] !== $filters['code']) {
-                return false;
-            }
-
-            if (isset($filters['price']) && $service['price'] != $filters['price']) {
-                return false;
-            }
-
-            return true;
-        });
-
-        return $filteredServices->values()->toArray();
+                $query->where(function (Builder $query) use ($search) {
+                    $query->where('name', 'like', "%{$search}%")
+                        ->orWhere('code', 'like', "%{$search}%");
+                });
+            })
+            ->when(! empty($filters['name']), function (Builder $query) use ($filters) {
+                $query->where('name', 'like', '%' . trim((string) $filters['name']) . '%');
+            })
+            ->when(! empty($filters['code']), function (Builder $query) use ($filters) {
+                $query->where('code', (string) $filters['code']);
+            })
+            ->when(isset($filters['price']) && $filters['price'] !== '', function (Builder $query) use ($filters) {
+                $query->where('price_cents', (int) round(((float) $filters['price']) * 100));
+            })
+            ->orderBy('name')
+            ->orderBy('id');
     }
 
     public static function forgetCache(): void
